@@ -1,0 +1,14 @@
+登录API: http://gps.primedigitaltech.com:8000/api/login/
+需要 username + password
+
+
+注册API: http://gps.primedigitaltech.com:8000/api/register/
+这个手机端完成，网页端不开放注册
+
+更新ACC：http://gps.primedigitaltech.com:8000/api/updateAcc/
+更新gps:  http://gps.primedigitaltech.com:8000/api/updateLocation/
+更新蓝牙：http://gps.primedigitaltech.com:8000/api/updateBT/
+三个更新均由手机端完成
+
+获取用户信息：http://gps.primedigitaltech.com:8000/api/getdata/
+需要username
