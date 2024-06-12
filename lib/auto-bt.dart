@@ -3,6 +3,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info/device_info.dart';
+import 'dart:async';
 
 class BluetoothScreen extends StatefulWidget {
   @override
@@ -11,11 +12,22 @@ class BluetoothScreen extends StatefulWidget {
 
 class _BluetoothScreenState extends State<BluetoothScreen> {
   List<ScanResult> scanResults = [];
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     initializeFlutterBlue();
+    // 启动定时器，每隔20秒执行一次发送数据操作
+    _timer = Timer.periodic(Duration(seconds: 20), (Timer timer) {
+      sendDataToAPI(); // 执行发送数据操作
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // 取消定时器
+    super.dispose();
   }
 
   Future<void> initializeFlutterBlue() async {
@@ -39,8 +51,6 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
         scanResults = results;
       });
     });
-
-    // flutterBlue.stopScan(); // 不需要在这里停止扫描，否则只会扫描一次就停止了
   }
 
   Future<void> sendDataToAPI() async {
@@ -69,7 +79,7 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     String devicesData = deviceNames.join(',');
 
     Map<String, dynamic> data = {
-      'connection_device': devicesData.substring(0,150),
+      'connection_device': devicesData.substring(0, 150),
       'device': deviceInfo,
     };
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:device_info/device_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'data_observation_page.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -47,8 +49,19 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         if (response.statusCode == 200) {
+          Map<String, dynamic> responseData = json.decode(response.body);
+          String accessToken = responseData['access'];
+
+          // 存储access令牌到本地存储
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', accessToken);
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login successful')),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DataObservationPage()),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +125,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   @override
-  // 资源释放
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();

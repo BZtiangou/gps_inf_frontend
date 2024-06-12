@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:device_info/device_info.dart';
+import 'dart:async'; 
 
 class AcclPage extends StatefulWidget {
   @override
@@ -10,16 +11,19 @@ class AcclPage extends StatefulWidget {
 
 class _AcclPageState extends State<AcclPage> {
   List<double> _accelerometerValues = [0, 0, 0];
+  StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
 
   @override
   void initState() {
     super.initState();
     // 监听加速度传感器数据
-    accelerometerEvents.listen((AccelerometerEvent event) {
-      setState(() {
-        _accelerometerValues = [event.x, event.y, event.z];
-        sendDataToAPI(_accelerometerValues);
-      });
+    _accelerometerSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
+      if (mounted) {
+        setState(() {
+          _accelerometerValues = [event.x, event.y, event.z];
+          sendDataToAPI(_accelerometerValues);
+        });
+      }
     });
   }
 
@@ -39,12 +43,12 @@ class _AcclPageState extends State<AcclPage> {
       deviceInfo = 'Error fetching device info: $e';
     }
     try {
-    Map<String, dynamic> data = {
-      'acc_x': '${accelerometerValues[0]}',
-      'acc_y': '${accelerometerValues[1]}',
-      'acc_z': '${accelerometerValues[2]}',
-      'device':deviceInfo,
-    };
+      Map<String, dynamic> data = {
+        'acc_x': '${accelerometerValues[0]}',
+        'acc_y': '${accelerometerValues[1]}',
+        'acc_z': '${accelerometerValues[2]}',
+        'device': deviceInfo,
+      };
 
       final response = await http.post(
         Uri.parse('http://gps.primedigitaltech.com:8000/api/updateAcc/'),
@@ -59,6 +63,12 @@ class _AcclPageState extends State<AcclPage> {
     } catch (e) {
       print('Error sending accelerometer data: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSubscription?.cancel();
+    super.dispose();
   }
 
   @override

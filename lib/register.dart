@@ -25,8 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
     setState(() {
-      _deviceInfo = 'Device: ${androidInfo.model}, '
-          'OS: Android ${androidInfo.version.release}';
+      _deviceInfo ='${androidInfo.brand} ${androidInfo.model} OS Version: ${androidInfo.version.release}';
     });
   }
 
