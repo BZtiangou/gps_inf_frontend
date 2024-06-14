@@ -55,6 +55,20 @@ android {
         }
         }
     }
+    
+    buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.2.2' // 更新 Gradle 插件版本
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20' // 更新 Kotlin Gradle 插件版本
+        classpath 'com.google.gms:google-services:4.3.10'
+    }
+}
+
 
     buildTypes {
         release {
