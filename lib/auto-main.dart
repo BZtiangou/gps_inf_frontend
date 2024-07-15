@@ -13,6 +13,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'data_observation_page.dart';
 
 void main() {
   runApp(MyApp());
@@ -63,11 +64,11 @@ class _MyHomePageState extends State<MyHomePage> {
       await collectAndSendACCData();
     });
     // 5分钟
-    _gpsTimer = Timer.periodic(Duration(minutes: 12), (timer) async {
+    _gpsTimer = Timer.periodic(Duration(seconds: 12), (timer) async {
       await collectAndSendGPSData();
     });
     // 五分钟
-    _btTimer = Timer.periodic(Duration(minutes: 5), (timer) async {
+    _btTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
       await collectAndSendBluetoothData();
     });
   }
@@ -86,15 +87,6 @@ class _MyHomePageState extends State<MyHomePage> {
     await collectAndSendBluetoothData(deviceInfo);
     await collectAndSendGPSData(deviceInfo);
     await collectAndSendACCData(deviceInfo);
-  }
-
-  Future<String> getAccessToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('access_token');
-    if (accessToken == null) {
-      throw Exception('Access token not found in SharedPreferences');
-    }
-    return accessToken;
   }
 
   Future<String> getDeviceInfo() async {
@@ -134,15 +126,9 @@ class _MyHomePageState extends State<MyHomePage> {
       'device': deviceInfo,
     };
 
-    String accessToken = await getAccessToken(); // Get access token from SharedPreferences
-
     final response = await http.post(
       Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
+      body: data,
     );
     if (response.statusCode == 200) {
       print('Bluetooth data sent successfully');
@@ -163,15 +149,9 @@ class _MyHomePageState extends State<MyHomePage> {
       'latitude': latitude,
     };
 
-    String accessToken = await getAccessToken(); // Get access token from SharedPreferences
-
     var response = await http.post(
       Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
+      body: data,
     );
     if (response.statusCode == 200) {
       print('GPS data sent successfully');
@@ -189,15 +169,9 @@ class _MyHomePageState extends State<MyHomePage> {
       'device': deviceInfo,
     };
 
-    String accessToken = await getAccessToken(); // Get access token from SharedPreferences
-
     final response = await http.post(
       Uri.parse('http://gps.primedigitaltech.com:8000/api/updateAcc/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
+      body: data,
     );
     if (response.statusCode == 200) {
       print('Accelerometer data sent successfully');

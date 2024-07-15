@@ -20,6 +20,11 @@ dependencies:
   sensors_plus: ^4.0.2
   flutter_background: ^1.0.3
   shared_preferences: ^2.0.6
+  flutter_charts : ^0.5.2
+    # 高德Flutter定位插件
+  amap_flutter_base: ^3.0.0 # flutter2空安全新版本
+  amap_flutter_map: ^3.0.0 # flutter2空安全新版本
+  amap_flutter_location: ^3.0.0 # flutter2空安全新版本
 
 
 dev_dependencies:

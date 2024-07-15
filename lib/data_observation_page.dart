@@ -1,115 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'obsacc.dart';
+import 'obsbt.dart';
+import 'obsmap.dart';
 
-class DataObservationPage extends StatefulWidget {
-  @override
-  _DataObservationPageState createState() => _DataObservationPageState();
+void main() {
+  runApp(MaterialApp(
+    home: DataObservationPage(),
+  ));
 }
 
-class _DataObservationPageState extends State<DataObservationPage> {
-  List<dynamic> accelerometers = [];
-  List<dynamic> bluetooths = [];
-  List<dynamic> locations = [];
-  bool isLoading = true;
-  String errorMessage = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchData();
-  }
-
-  Future<void> _fetchData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('access_token');
-
-    if (accessToken != null) {
-      try {
-        final response = await http.get(
-          Uri.parse('http://gps.primedigitaltech.com:8000/api/getdata/'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $accessToken',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          Map<String, dynamic> data = json.decode(response.body);
-          setState(() {
-            accelerometers = data['accelerometers'];
-            bluetooths = data['bluetooths'];
-            locations = data['locations'];
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            errorMessage = 'Failed to load data: ${response.statusCode}';
-            isLoading = false;
-          });
-        }
-      } catch (e) {
-        setState(() {
-          errorMessage = 'Error: $e';
-          isLoading = false;
-        });
-      }
-    } else {
-      setState(() {
-        errorMessage = 'No access token found';
-        isLoading = false;
-      });
-    }
-  }
-
+class DataObservationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Data Observation'),
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
-              : SingleChildScrollView(
-                  padding: EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Accelerometers',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      ...accelerometers.map((item) => ListTile(
-                            title: Text(item.toString()),
-                          )),
-                      Divider(),
-                      Text(
-                        'Bluetooths',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      ...bluetooths.map((item) => ListTile(
-                            title: Text(item.toString()),
-                          )),
-                      Divider(),
-                      Text(
-                        'Locations',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                      ...locations.map((item) => ListTile(
-                            title: Text(item.toString()),
-                          )),
-                    ],
-                  ),
-                ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                _navigateToGpsObservationPage(context); // 导航到 GPS 数据观测页面
+              },
+              child: Text('GPS Data Observation'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigateToBtObservationPage(context); // 导航到 BT 数据观测页面
+              },
+              child: Text('BT Data Observation'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                _navigateToAccObservationPage(context); // 导航到 ACC 数据观测页面
+              },
+              child: Text('ACC Data Observation'),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // 返回到上一级页面
+          Navigator.pop(context);
+        },
+        tooltip: '返回',
+        child: Icon(Icons.arrow_back),
+      ),
     );
   }
-}
 
-void main() {
-  runApp(MaterialApp(
-    home: DataObservationPage(),
-  ));
+  // 导航到 GPS 数据观测页面
+  void _navigateToGpsObservationPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GpsObservationPage()),
+    );
+    // 返回后的操作，可以在这里处理
+  }
+
+  // 导航到 BT 数据观测页面
+  void _navigateToBtObservationPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BtObservationPage()),
+    );
+    // 返回后的操作，可以在这里处理
+  }
+
+  // 导航到 ACC 数据观测页面
+  void _navigateToAccObservationPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => AccObservationPage()),
+    );
+    // 返回后的操作，可以在这里处理
+  }
 }

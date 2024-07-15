@@ -12,6 +12,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   String _deviceInfo = 'Fetching device info...';
 
@@ -35,12 +37,16 @@ class _RegisterPageState extends State<RegisterPage> {
       String username = _usernameController.text;
       String email = _emailController.text;
       String password = _passwordController.text;
+      String phone = _phoneController.text;
+      String name = _nameController.text;
 
       Map<String, String> data = {
         'username': username,
         'email': email,
         'password': password,
         'device': _deviceInfo,
+        'name': name,
+        'phone_number': phone,
       };
 
       try {
@@ -109,6 +115,28 @@ class _RegisterPageState extends State<RegisterPage> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
+                  }
+                  return null;
+                },
+              ),
+                            TextFormField(
+                controller: _phoneController,
+                decoration: InputDecoration(labelText: 'phone number'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your phone number';
+                  }
+                  return null;
+                },
+              ),
+                            TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: 'name'),
+                obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
                   }
                   return null;
                 },

@@ -1,0 +1,4 @@
+androidKey: 'd33074d34e5524ed087ce820363a1779'
+Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIwNzUwNTQ2LCJpYXQiOjE3MjAxNDU3NDYsImp0aSI6IjZlOGQzOTA1MzMxZDQ2YjBiNDYxNTU4MmY1OTA1MWJiIiwidXNlcl9pZCI6M30.TLFYgPpccp1ZgRWD9kPkrPDxFruc7DMNoTrHFgIvKdA
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? accessToken = prefs.getString('access_token');

@@ -24,7 +24,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.gps_inf"
-    compileSdkVersion flutter.compileSdkVersion
+    // compileSdkVersion flutter.compileSdkVersion
+    compileSdk = flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -46,6 +47,10 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion flutter.minSdkVersion
+                    // Configure NDK to support specific ABIs
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -55,18 +60,13 @@ android {
         }
         }
     }
-    
+
     buildscript {
     repositories {
         google()
         jcenter()
     }
 
-    dependencies {
-        classpath 'com.android.tools.build:gradle:4.2.2' // 更新 Gradle 插件版本
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20' // 更新 Kotlin Gradle 插件版本
-        classpath 'com.google.gms:google-services:4.3.10'
-    }
 }
 
 
@@ -83,4 +83,11 @@ flutter {
     source '../..'
 }
 
-dependencies {}
+dependencies {
+    // Include all JARs in the 'libs' directory
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // AMap 3D map integration
+    implementation 'com.amap.api:3dmap:latest.integration'
+
+}

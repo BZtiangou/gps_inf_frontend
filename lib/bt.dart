@@ -62,14 +62,14 @@ class _BluetoothScreenState extends State<BluetoothScreen> {
     // 封装附近设备信息
     // 获取所有设备的名称列表
     List<String> deviceNames = scanResults.map((result) {
-      return result.device.name.isNotEmpty ? result.device.name : 'Unknown Device';
+      return result.device.remoteId.toString();
     }).toList();
 
     // 将设备名称列表连接成一个字符串，使用逗号分隔
     String devicesData = deviceNames.join(',');
 
     Map<String, dynamic> data = {
-      'connection_device': devicesData.substring(0,150),
+      'connection_device': devicesData,
       'device': deviceInfo,
     };
 
