@@ -25,7 +25,7 @@ dependencies:
   amap_flutter_base: ^3.0.0 # flutter2空安全新版本
   amap_flutter_map: ^3.0.0 # flutter2空安全新版本
   amap_flutter_location: ^3.0.0 # flutter2空安全新版本
-
+  coordtransform: ^1.0.1
 
 dev_dependencies:
   flutter_test:

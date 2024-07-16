@@ -9,13 +9,14 @@ class GpsPage extends StatefulWidget {
 }
 
 class _GpsPageState extends State<GpsPage> {
-  String displayText = 'Welcome to GPS_INF';
+  String displayText = 'Welcome to AMAP_INF';
 
   Future<void> updateText() async {
     String newText = '';
     String longitude = '';
     String latitude = '';
     String deviceInfo = '';
+    
     try {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
@@ -100,19 +101,5 @@ class _GpsPageState extends State<GpsPage> {
   }
 }
 
-class AccPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('ACC Page'),
-      ),
-      body: Center(
-        child: Text(
-          'This is the ACC Page',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
+
+

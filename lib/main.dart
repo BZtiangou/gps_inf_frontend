@@ -5,7 +5,7 @@ import 'gps.dart';
 import 'login.dart';
 import 'accl.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info/device_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
@@ -13,6 +13,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:amap_flutter_location/amap_flutter_location.dart';
+import 'package:amap_flutter_location/amap_location_option.dart';
 
 void main() {
   runApp(MyApp());
@@ -59,11 +61,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void startBackgroundTasks() {
-    _accTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
+    _accTimer = Timer.periodic(Duration(minutes: 2), (timer) async {
       await collectAndSendACCData();
     });
     // 5分钟
-    _gpsTimer = Timer.periodic(Duration(minutes: 12), (timer) async {
+    _gpsTimer = Timer.periodic(Duration(seconds: 5), (timer) async {
       await collectAndSendGPSData();
     });
     // 五分钟
@@ -123,7 +125,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     await Future.delayed(Duration(seconds: 4)); // 等待扫描完成
-
     List<String> deviceNames = scanResults.map((result) {
       return result.device.remoteId.toString();
     }).toList();
@@ -133,9 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
       'connection_device': devicesData,
       'device': deviceInfo,
     };
-
     String accessToken = await getAccessToken(); // Get access token from SharedPreferences
-
     final response = await http.post(
       Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
       headers: {
@@ -152,33 +151,94 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> collectAndSendGPSData([String? deviceInfo]) async {
-    deviceInfo ??= await getDeviceInfo();
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    String latitude = position.latitude.toString();
-    String longitude = position.longitude.toString();
-
-    Map<String, dynamic> data = {
-      'longitude': longitude,
-      'device': deviceInfo,
-      'latitude': latitude,
-    };
-
-    String accessToken = await getAccessToken(); // Get access token from SharedPreferences
-
-    var response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
-    );
-    if (response.statusCode == 200) {
-      print('GPS data sent successfully');
-    } else {
-      print('Failed to send GPS data. Error: ${response.reasonPhrase}');
-    }
+  // 动态申请定位权限
+  bool hasLocationPermission = await requestLocationPermission();
+  if (!hasLocationPermission) {
+    print('定位权限申请不通过');
+    return;
   }
+
+  // 设置高德地图定位参数
+  AMapFlutterLocation locationPlugin = AMapFlutterLocation();
+  AMapFlutterLocation.updatePrivacyShow(true, true);
+  AMapFlutterLocation.updatePrivacyAgree(true);
+  AMapFlutterLocation.setApiKey("d33074d34e5524ed087ce820363a1779", "IOS Api Key");
+
+  bool isConnected = await checkInternetConnection();
+  print("Network connected: $isConnected");
+
+  AMapLocationOption locationOption = AMapLocationOption();
+  locationOption.onceLocation = true;
+  locationOption.needAddress = false;
+  locationOption.locationMode = isConnected ? AMapLocationMode.Hight_Accuracy : AMapLocationMode.Device_Sensors;
+  locationOption.desiredAccuracy = DesiredAccuracy.Best;
+  locationOption.geoLanguage = GeoLanguage.DEFAULT;
+  locationPlugin.setLocationOption(locationOption);
+
+  Completer<Map<String, Object>> completer = Completer();
+  locationPlugin.onLocationChanged().listen((Map<String, Object> result) {
+    if (!completer.isCompleted) {
+      completer.complete(result);
+      locationPlugin.stopLocation();
+    }
+  });
+
+  locationPlugin.startLocation();
+  Map<String, Object> locationResult = await completer.future;
+
+  double latitude = locationResult['latitude'] as double;
+  double longitude = locationResult['longitude'] as double;
+  double accuracy = locationResult['accuracy'] as double;
+
+  // 获取设备信息
+  deviceInfo ??= await getDeviceInfo();
+
+  Map<String, dynamic> data = {
+    'longitude': longitude,
+    'device': deviceInfo,
+    'latitude': latitude,
+    'accuracy': accuracy,
+  };
+
+  // 获取 Access Token
+  String accessToken = await getAccessToken();
+
+  var response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode(data),
+  );
+  if (response.statusCode == 200) {
+    print('GPS data sent successfully');
+  } else {
+    print('Failed to send GPS data. Error: ${response.reasonPhrase}');
+  }
+}
+
+/// 检查网络连接状态
+Future<bool> checkInternetConnection() async {
+  try {
+    final result = await InternetAddress.lookup('example.com');
+    return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+  } on SocketException catch (_) {
+    return false;
+  }
+}
+
+/// 动态申请定位权限
+Future<bool> requestLocationPermission() async {
+  var status = await Permission.location.status;
+  if (status == PermissionStatus.granted) {
+    return true;
+  } else {
+    status = await Permission.location.request();
+    return status == PermissionStatus.granted;
+  }
+}
+
 
   Future<void> collectAndSendACCData([String? deviceInfo]) async {
     deviceInfo ??= await getDeviceInfo();

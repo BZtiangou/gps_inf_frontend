@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'data_observation_page.dart' ;
 import 'package:shared_preferences/shared_preferences.dart';
 
-
   Future<String> getAccessToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? accessToken = prefs.getString('access_token');
@@ -31,16 +30,30 @@ Future<void> fetchAndDisplayACCData(List<List<double>> dataPoints, List<String> 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body);
       var accelerometers = jsonData['accelerometers'];
-      for (var accelerometer in accelerometers) {
-        var x = accelerometer['acc_x'];
-        var y = accelerometer['acc_y'];
-        var z = accelerometer['acc_z'];
-        listx.add(x);
-        listy.add(y);
-        listz.add(z);
-        listsum.add(x + y + z);
-        dt.add(accelerometer['timestamp']);
-      }
+      // for (var accelerometer in accelerometers) {
+      //   var x = accelerometer['acc_x'];
+      //   var y = accelerometer['acc_y'];
+      //   var z = accelerometer['acc_z'];
+      //   listx.add(x);
+      //   listy.add(y);
+      //   listz.add(z);
+      //   listsum.add(x + y + z);
+      //   dt.add(accelerometer['timestamp']);
+      // }
+      // 倒序遍历前100个数据
+      for (var i = 0; i < 100; i++) {
+      var index = accelerometers.length - 1 - i;
+      if (index < 0) break; // 确保索引不会超出数组范围
+      var accelerometer = accelerometers[index];
+      var x = accelerometer['acc_x'];
+      var y = accelerometer['acc_y'];
+      var z = accelerometer['acc_z'];
+      listx.add(x);
+      listy.add(y);
+      listz.add(z);
+      listsum.add(x + y + z);
+      dt.add(accelerometer['timestamp']);
+    }
       dataPoints.add(listx);
       dataPoints.add(listy);
       dataPoints.add(listz);
@@ -64,7 +77,7 @@ Widget chartToRun(List<List<double>> dataPoints, List<String> dt) {
   ChartOptions chartOptions = const ChartOptions(
 
   );
-
+  
   ChartData chartData = ChartData(
     dataRows: dataPoints,
     xUserLabels: dt,
