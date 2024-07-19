@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data_observation_page.dart';
 import 'register.dart';
+import 'forgot_password.dart';  // 导入忘记密码页面
 
 class LoginPage extends StatefulWidget {
   @override
@@ -56,7 +57,7 @@ class _LoginPageState extends State<LoginPage> {
           // 存储access令牌到本地存储
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('access_token', accessToken);
-
+          await prefs.setString('username', username);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login successful')),
           );
@@ -71,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Error: $e 请检查您的账号密码')),
         );
       }
     }
@@ -168,7 +169,12 @@ class _LoginPageState extends State<LoginPage> {
                       child: Text('注册账号'),
                     ),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgotPasswordStep1()),  // 跳转到忘记密码页面
+                        );
+                      },
                       child: Text('忘记密码？'),
                     ),
                   ],

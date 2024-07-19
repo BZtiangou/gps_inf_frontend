@@ -6,6 +6,7 @@ import 'obsbt.dart';
 import 'obsmap.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'person.dart'; // 导入person.dart文件
 
 void main() {
   runApp(MaterialApp(
@@ -14,13 +15,13 @@ void main() {
 }
 
 Future<String> getAccessToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('access_token');
-    if (accessToken == null) {
-      throw Exception('Access token not found in SharedPreferences');
-    }
-    return accessToken;
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? accessToken = prefs.getString('access_token');
+  if (accessToken == null) {
+    throw Exception('Access token not found in SharedPreferences');
   }
+  return accessToken;
+}
 
 class DataObservationPage extends StatefulWidget {
   @override
@@ -171,11 +172,11 @@ class _DataObservationPageState extends State<DataObservationPage> {
       "survey_id": 1,
       "answers": answersList,
     };
-    String accessToken = await getAccessToken(); 
+    String accessToken = await getAccessToken();
     try {
       final response = await http.post(
         Uri.parse('http://gps.primedigitaltech.com:8000/survey/sendRes/'),
-        headers: {'Content-Type': 'application/json','Authorization': 'Bearer $accessToken'},
+        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $accessToken'},
         body: json.encode(data),
       );
 
@@ -207,43 +208,116 @@ class _DataObservationPageState extends State<DataObservationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Data Observation'),
+        title: Text('数据观测'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // 退出实验逻辑
+            },
+            child: Text(
+              '退出实验',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
           children: <Widget>[
-            ElevatedButton(
-              onPressed: _showQuestionnaireAlert,
-              child: Text('查看问卷'),
+            _buildGridItem(
+              context,
+              icon: Icons.gps_fixed,
+              label: 'GPS',
+              onTap: () => _navigateToGpsObservationPage(context),
             ),
-            ElevatedButton(
-              onPressed: () {
-                _navigateToGpsObservationPage(context);
-              },
-              child: Text('GPS Data Observation'),
+            _buildGridItem(
+              context,
+              icon: Icons.show_chart,
+              label: '加速度',
+              onTap: () => _navigateToAccObservationPage(context),
             ),
-            ElevatedButton(
-              onPressed: () {
-                _navigateToBtObservationPage(context);
-              },
-              child: Text('BT Data Observation'),
+            _buildGridItem(
+              context,
+              icon: Icons.bluetooth,
+              label: '蓝牙',
+              onTap: () => _navigateToBtObservationPage(context),
             ),
-            ElevatedButton(
-              onPressed: () {
-                _navigateToAccObservationPage(context);
-              },
-              child: Text('ACC Data Observation'),
+            _buildGridItem(
+              context,
+              icon: Icons.question_answer,
+              label: '问卷',
+              onTap: () => _showQuestionnaireAlert(),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pop(context);
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '首页',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.info),
+            label: '信息',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '我的',
+          ),
+        ],
+        currentIndex: 0, // 默认选中首页
+        onTap: (index) {
+          if (index == 2) { // 点击“我的”
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PersonPage()), // 跳转到PersonPage
+            );
+          }
         },
-        tooltip: '返回',
-        child: Icon(Icons.arrow_back),
+      ),
+    );
+  }
+
+  Widget _buildGridItem(BuildContext context, {required IconData icon, required String label, required Function() onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          color: Colors.blue[100],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 50.0,
+              color: Colors.blue[900],
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue[900],
+              ),
+            ),
+            SizedBox(height: 8.0),
+            Text(
+              '点击查看我的${label}数据',
+              style: TextStyle(
+                fontSize: 12.0,
+                color: Colors.blue[700],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

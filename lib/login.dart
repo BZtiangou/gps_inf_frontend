@@ -52,9 +52,13 @@ class _LoginPageState extends State<LoginPage> {
           Map<String, dynamic> responseData = json.decode(response.body);
           String accessToken = responseData['access'];
 
-          // 存储access令牌到本地存储
+          // 存储access令牌 和 用户名到本地存储
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('access_token', accessToken);
+          await prefs.setString('username', username);
+          // 打印日志确认存储成功
+print('Stored access_token: $accessToken');
+print('Stored username: $username');
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login successful')),
