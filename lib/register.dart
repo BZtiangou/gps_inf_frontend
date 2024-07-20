@@ -95,7 +95,7 @@ class _RegisterPageState extends State<RegisterPage> {
           await prefs.setString('username', username);
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login successful')),
+            SnackBar(content: Text('Please choose a experiment!')),
           );
 
           // Navigate to the Experiment Selection Page
@@ -247,7 +247,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _register,
-                    child: Text('注册并登录'),
+                    child: Text('注册'),
                   ),
                 ),
                 SizedBox(height: 60),  // Add some space at the bottom to avoid overflow

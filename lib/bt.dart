@@ -4,6 +4,17 @@ import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info/device_info.dart';
 
+    // List<Map<String, dynamic>> bluetoothDataList = [];
+    // for (ScanResult result in scanResults) {
+    //   bluetoothDataList.add({
+    //     'name': result.device.name,
+    //     'id': result.device.id.toString(),
+    //     'rssi': result.rssi,
+    //   });
+ // 拼接所有的 Bluetooth 设备 ID
+   
+    // }
+
 class BluetoothScreen extends StatefulWidget {
   @override
   _BluetoothScreenState createState() => _BluetoothScreenState();

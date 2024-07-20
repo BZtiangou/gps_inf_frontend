@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data_observation_page.dart';
+import 'register.dart';
+import 'forgot_password.dart';  // 导入忘记密码页面
 
 class LoginPage extends StatefulWidget {
   @override
@@ -52,14 +54,10 @@ class _LoginPageState extends State<LoginPage> {
           Map<String, dynamic> responseData = json.decode(response.body);
           String accessToken = responseData['access'];
 
-          // 存储access令牌 和 用户名到本地存储
+          // 存储access令牌到本地存储
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setString('access_token', accessToken);
           await prefs.setString('username', username);
-          // 打印日志确认存储成功
-print('Stored access_token: $accessToken');
-print('Stored username: $username');
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login successful')),
           );
@@ -74,7 +72,7 @@ print('Stored username: $username');
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text('Error: $e 请检查您的账号密码')),
         );
       }
     }
@@ -83,45 +81,106 @@ print('Stored username: $username');
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your username';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: Text(_deviceInfo),
-              ),
-              ElevatedButton(
-                onPressed: _login,
-                child: Text('Login'),
-              ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.blue[100]!,
+              Colors.blue[200]!,
+              Colors.blue[100]!,
             ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '欢迎登陆',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 30),
+                TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: '账号',
+                    hintText: '输入账号/手机号',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入您的账号';
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    labelText: '密码',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  obscureText: true,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入您的密码';
+                    }
+                    return null;
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text(_deviceInfo),
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _login,
+                    child: Text('登录'),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                        );
+                      },
+                      child: Text('注册账号'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgotPasswordStep1()),  // 跳转到忘记密码页面
+                        );
+                      },
+                      child: Text('忘记密码？'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

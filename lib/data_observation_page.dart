@@ -209,14 +209,15 @@ class _DataObservationPageState extends State<DataObservationPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('数据观测'),
+        automaticallyImplyLeading: false, // 强制隐藏返回箭头
         actions: [
           TextButton(
             onPressed: () {
               // 退出实验逻辑
             },
             child: Text(
-              '退出实验',
-              style: TextStyle(color: Colors.white),
+              '实验中',
+              style: TextStyle(color: const Color.fromARGB(255, 224, 20, 20)),
             ),
           ),
         ],

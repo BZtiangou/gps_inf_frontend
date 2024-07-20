@@ -47,6 +47,7 @@ class PersonPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('我的'),
+        automaticallyImplyLeading: false, // 强制隐藏返回箭头
         centerTitle: true,
         backgroundColor: Colors.blue[200],
       ),

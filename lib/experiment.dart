@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data_observation_page.dart';
+import 'main.dart';
 
 class ExperimentSelectionPage extends StatefulWidget {
   @override
@@ -47,13 +48,17 @@ class _ExperimentSelectionPageState extends State<ExperimentSelectionPage> {
     if (response.statusCode == 200) {
       // Successfully joined the experiment
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('成功加入/更换实验! 实验名称: $expName')),
+        SnackBar(content: Text('成功加入/更换实验! 将在登录后生效 实验名称: $expName')),
       );
             // 跳转到 DataObservationPage
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => DataObservationPage()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
+
+
+
+    
     } else {
       // Failed to join the experiment
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,6 +72,7 @@ class _ExperimentSelectionPageState extends State<ExperimentSelectionPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('请选你想要加入的实验'),
+        automaticallyImplyLeading: false, // 强制隐藏返回箭头
         centerTitle: true,
         backgroundColor: Colors.blue[200],
       ),
