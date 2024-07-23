@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'data_observation_page.dart'; // 导入data_observation_page.dart文件以便导航回首页
+import 'main.dart'; // 导入main.dart文件以便导航至登录页面
+import 'experiment.dart'; // 导入experiment_selection_page.dart文件以便导航至实验选择页面
+import 'my_info.dart'; // 导入my_info.dart文件以便导航至我的信息页面
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String> getusername() async {
@@ -103,7 +106,7 @@ class PersonPage extends StatelessWidget {
                     context: context,
                     builder: (BuildContext context) {
                       return AlertDialog(
-                        title: Text('实验详情'),
+                        title: Text('我的实验'),
                         content: experimentDetails.isNotEmpty
                             ? Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,6 +197,43 @@ class PersonPage extends StatelessWidget {
                       ],
                     );
                   },
+                );
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.science, color: Colors.grey),
+              title: Text('选择实验'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ExperimentSelectionPage()), // 跳转到实验选择页面
+                );
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.info, color: Colors.grey),
+              title: Text('我的信息'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MyInfoPage()), // 跳转到我的信息页面
+                );
+              },
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.grey),
+              title: Text('退出登录'),
+              onTap: () async {
+                SharedPreferences prefs = await SharedPreferences.getInstance();
+                await prefs.clear();
+                // 结束所有定时器
+                cancelTimers();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               },
             ),

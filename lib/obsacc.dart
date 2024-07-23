@@ -2,62 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter_charts/flutter_charts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'data_observation_page.dart' ;
+import 'data_observation_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-  Future<String> getAccessToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? accessToken = prefs.getString('access_token');
-    if (accessToken == null) {
-      throw Exception('Access token not found in SharedPreferences');
-    }
-    return accessToken;
+Future<String> getAccessToken() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? accessToken = prefs.getString('access_token');
+  if (accessToken == null) {
+    throw Exception('Access token not found in SharedPreferences');
   }
+  return accessToken;
+}
 
 Future<void> fetchAndDisplayACCData(List<List<double>> dataPoints, List<String> dt) async {
-   String accessToken = await getAccessToken(); 
+  String accessToken = await getAccessToken();
   var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getACCdata/');
   try {
     var response = await http.get(url, headers: {
-    'Authorization': 'Bearer $accessToken',
+      'Authorization': 'Bearer $accessToken',
     });
 
     List<double> listx = [];
     List<double> listy = [];
     List<double> listz = [];
-    List<double> listsum = [];
 
     if (response.statusCode == 200) {
       var jsonData = jsonDecode(response.body);
       var accelerometers = jsonData['accelerometers'];
-      // for (var accelerometer in accelerometers) {
-      //   var x = accelerometer['acc_x'];
-      //   var y = accelerometer['acc_y'];
-      //   var z = accelerometer['acc_z'];
-      //   listx.add(x);
-      //   listy.add(y);
-      //   listz.add(z);
-      //   listsum.add(x + y + z);
-      //   dt.add(accelerometer['timestamp']);
-      // }
-      // 倒序遍历前100个数据
       for (var i = 0; i < 100; i++) {
-      var index = accelerometers.length - 1 - i;
-      if (index < 0) break; // 确保索引不会超出数组范围
-      var accelerometer = accelerometers[index];
-      var x = accelerometer['acc_x'];
-      var y = accelerometer['acc_y'];
-      var z = accelerometer['acc_z'];
-      listx.add(x);
-      listy.add(y);
-      listz.add(z);
-      listsum.add(x + y + z);
-      dt.add(accelerometer['timestamp']);
-    }
+        var index = accelerometers.length - 1 - i;
+        if (index < 0) break; // 确保索引不会超出数组范围
+        var accelerometer = accelerometers[index];
+        var x = accelerometer['acc_x'];
+        var y = accelerometer['acc_y'];
+        var z = accelerometer['acc_z'];
+        listx.add(x);
+        listy.add(y);
+        listz.add(z);
+        dt.add(accelerometer['timestamp'].substring(11, 19)); // 截断时间戳，只保留时分秒
+      }
       dataPoints.add(listx);
       dataPoints.add(listy);
       dataPoints.add(listz);
-      // dataPoints.add(listsum);
     } else {
       print('Failed to load ACC data: ${response.statusCode}');
     }
@@ -74,10 +60,8 @@ Future<List<dynamic>> fetchACCData() async {
 }
 
 Widget chartToRun(List<List<double>> dataPoints, List<String> dt) {
-  ChartOptions chartOptions = const ChartOptions(
+  ChartOptions chartOptions = const ChartOptions();
 
-  );
-  
   ChartData chartData = ChartData(
     dataRows: dataPoints,
     xUserLabels: dt,
@@ -94,10 +78,13 @@ Widget chartToRun(List<List<double>> dataPoints, List<String> dt) {
       lineChartContainer: lineChartContainer,
     ),
   );
-  return Container(
-    width: 400,
-    height: 400, 
-    child: lineChart,
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Container(
+      width: dataPoints[0].length * 20, // 根据数据点数量调整宽度
+      height: 400,
+      child: lineChart,
+    ),
   );
 }
 
@@ -166,10 +153,13 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-        floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           // 返回到上一级页面
-          Navigator.push(context,MaterialPageRoute(builder: (context) => DataObservationPage()),);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DataObservationPage()),
+          );
         },
         tooltip: '返回',
         child: Icon(Icons.arrow_back),

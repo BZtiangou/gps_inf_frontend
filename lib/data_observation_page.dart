@@ -7,6 +7,8 @@ import 'obsmap.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'person.dart'; // 导入person.dart文件
+import 'experiment.dart'; // 导入experiment.dart文件
+import 'main.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -32,12 +34,14 @@ class _DataObservationPageState extends State<DataObservationPage> {
   Timer? _timer;
   late List<Map<String, dynamic>> questions = [];
   final Map<int, dynamic> _answers = {};
+  String experimentStatus = '请选择实验'; // 默认状态
 
   @override
   void initState() {
     super.initState();
     _startTimer();
     _fetchQuestions();
+    _checkExperimentStatus();
   }
 
   void _startTimer() {
@@ -65,10 +69,19 @@ class _DataObservationPageState extends State<DataObservationPage> {
     }
   }
 
-  void _checkTime() {
+  void _checkTime() async {
     final now = DateTime.now();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String today = now.toIso8601String().split('T')[0]; // 获取当前日期字符串（格式：yyyy-MM-dd）
+
     if (now.hour == 11 && now.minute == 0) {
-      _showQuestionnaireAlert();
+      // 检查今天是否已经显示过问卷
+      String? lastShownDate = prefs.getString('lastQuestionnaireShownDate');
+      if (lastShownDate == null || lastShownDate != today) {
+        _showQuestionnaireAlert();
+        // 更新标志为今天的日期
+        await prefs.setString('lastQuestionnaireShownDate', today);
+      }
     }
   }
 
@@ -198,6 +211,57 @@ class _DataObservationPageState extends State<DataObservationPage> {
     }
   }
 
+  Future<void> _checkExperimentStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://gps.primedigitaltech.com:8000/exp/myExp/'),
+        headers: {'Authorization': 'Bearer ${await getAccessToken()}'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          experimentStatus = '退出实验';
+        });
+      } else if (response.statusCode == 520) {
+        setState(() {
+          experimentStatus = '请选择实验';
+        });
+      } else {
+        throw Exception('Unexpected status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error checking experiment status: $e');
+    }
+  }
+
+  Future<void> _exitExperiment() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://gps.primedigitaltech.com:8000/exp/exitExp/'),
+        headers: {'Authorization': 'Bearer ${await getAccessToken()}'},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          experimentStatus = '请选择实验';
+        });
+        cancelTimers();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已成功退出实验')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('退出实验失败: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      print('Error exiting experiment: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('退出实验错误: $e')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -213,10 +277,17 @@ class _DataObservationPageState extends State<DataObservationPage> {
         actions: [
           TextButton(
             onPressed: () {
-              // 退出实验逻辑
+              if (experimentStatus == '退出实验') {
+                _exitExperiment(); // 退出实验
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ExperimentSelectionPage()), // 跳转到ExperimentSelectionPage
+                );
+              }
             },
             child: Text(
-              '实验中',
+              experimentStatus,
               style: TextStyle(color: const Color.fromARGB(255, 224, 20, 20)),
             ),
           ),

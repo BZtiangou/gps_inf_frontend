@@ -13,14 +13,16 @@ import 'data_observation_page.dart';
 import 'register.dart';
 import 'forgot_password.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-  Timer? _accTimer;
-  Timer? _gpsTimer;
-  Timer? _btTimer;
+
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
+
+  Timer? _accTimer;
+  Timer? _gpsTimer;
+  Timer? _btTimer;
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
@@ -29,22 +31,11 @@ class _LoginPageState extends State<LoginPage> {
   List<double> _accelerometerValues = [0.0, 0.0, 0.0];
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   String _deviceInfo = 'Fetching device info...';
-  
-
 
   @override
   void initState() {
     super.initState();
     _getDeviceInfo();
-    _startListeningToAccelerometer();
-  }
-
-  void _startListeningToAccelerometer() {
-    _accelerometerSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
-      setState(() {
-        _accelerometerValues = [event.x, event.y, event.z];
-      });
-    });
   }
 
   void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency) {
@@ -115,15 +106,13 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => DataObservationPage()),
           );
         } else {
-          Map<String, dynamic> responseData = json.decode(response.body);
-          String message = responseData['message'];
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: $message')),
+            SnackBar(content: Text('Login failed: ${response.body}')),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('登陆失败! 请检查您的账号和密码')),
+          SnackBar(content: Text('Error: $e 请检查您的账号密码')),
         );
       }
     }
@@ -272,6 +261,7 @@ class _LoginPageState extends State<LoginPage> {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
+      
       body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
     );
     print(bluetoothData);
@@ -419,7 +409,6 @@ void cancelTimers() {
   _gpsTimer?.cancel();
   _btTimer?.cancel();
 }
-
 void main() {
   runApp(MaterialApp(
     home: LoginPage(),

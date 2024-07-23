@@ -3,7 +3,7 @@ import 'package:device_info/device_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'experiment.dart';
+import 'data_observation_page.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -59,13 +59,15 @@ class _RegisterPageState extends State<RegisterPage> {
         );
 
         if (response.statusCode == 201) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration successful')),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('Registration successful')),
+          // );
         } else {
+          var errorMessage = utf8.decode(response.bodyBytes);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration failed: ${response.body}')),
+            SnackBar(content: Text('Registration failed: $errorMessage')),
           );
+          return;
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,17 +97,18 @@ class _RegisterPageState extends State<RegisterPage> {
           await prefs.setString('username', username);
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Please choose a experiment!')),
+            SnackBar(content: Text('Registration and Login successful!')),
           );
 
           // Navigate to the Experiment Selection Page
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => ExperimentSelectionPage()),
+            MaterialPageRoute(builder: (context) => DataObservationPage()),
           );
         } else {
+          var errorMessage = utf8.decode(response.bodyBytes);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: ${response.body}')),
+            SnackBar(content: Text('Login failed: $errorMessage')),
           );
         }
       } catch (e) {
