@@ -13,9 +13,13 @@ import 'data_observation_page.dart';
 import 'register.dart';
 import 'forgot_password.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-  Timer? _accTimer;
-  Timer? _gpsTimer;
-  Timer? _btTimer;
+import 'package:amap_flutter_base/amap_flutter_base.dart';
+import 'battery_optimization.dart';
+
+Timer? _accTimer;
+Timer? _gpsTimer;
+Timer? _btTimer;
+
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -29,14 +33,13 @@ class _LoginPageState extends State<LoginPage> {
   List<double> _accelerometerValues = [0.0, 0.0, 0.0];
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   String _deviceInfo = 'Fetching device info...';
-  
-
 
   @override
   void initState() {
     super.initState();
     _getDeviceInfo();
     _startListeningToAccelerometer();
+    BatteryOptimization.requestIgnoreBatteryOptimizations();
   }
 
   void _startListeningToAccelerometer() {
@@ -48,13 +51,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency) {
-    _accTimer = Timer.periodic(Duration(seconds: accFrequency), (timer) async {
+    _accTimer = Timer.periodic(Duration(minutes: accFrequency), (timer) async {
       await collectAndSendACCData();
     });
     _gpsTimer = Timer.periodic(Duration(minutes: gpsFrequency), (timer) async {
       await collectAndSendGPSData();
     });
-    _btTimer = Timer.periodic(Duration(minutes: btFrequency), (timer) async {
+    _btTimer = Timer.periodic(Duration(seconds: btFrequency), (timer) async {
       await collectAndSendBluetoothData();
     });
   }
@@ -184,9 +187,9 @@ class _LoginPageState extends State<LoginPage> {
       },
       body: jsonEncode(data),
     );
+
     if (response.statusCode == 200) {
       print('Accelerometer data sent successfully');
-      print(_accelerometerValues[0]);
     } else {
       print('Failed to send accelerometer data. Error: ${response.reasonPhrase}');
     }
@@ -249,39 +252,74 @@ class _LoginPageState extends State<LoginPage> {
     );
     if (response.statusCode == 200) {
       print('GPS data sent successfully');
+
+      Map<String, dynamic> responseData = json.decode(response.body);
+      int flag = responseData['flag'];
+
+      if (flag == 1) {
+        // 更新 pending_gps 列表
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? pendingGpsJson = prefs.getString('pending_gps');
+
+        List<LatLng> pendingGps = pendingGpsJson != null
+            ? (jsonDecode(pendingGpsJson) as List<dynamic>)
+                .map((e) => LatLng(e['latitude'], e['longitude']))
+                .toList()
+            : [];
+
+        pendingGps.add(LatLng(latitude, longitude));
+
+        String newPendingGpsJson = jsonEncode(pendingGps.map((e) => {'latitude': e.latitude, 'longitude': e.longitude}).toList());
+        await prefs.setString('pending_gps', newPendingGpsJson);
+
+        print('Coordinate added to pending_gps list.');
+        print(prefs.getString('pending_gps'));
+      }
+
     } else {
       print('Failed to send GPS data. Error: ${response.reasonPhrase}');
     }
   }
 
-  Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
-    deviceInfo ??= _deviceInfo;
-    await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
-    List<ScanResult> scanResults = [];
-    FlutterBluePlus.scanResults.listen((results) {
-      scanResults = results;
-    });
+Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
+  deviceInfo ??= _deviceInfo; // 使用默认设备信息
+  
+  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+  
+  // 收集扫描结果
+  List<ScanResult> scanResults = [];
+  FlutterBluePlus.scanResults.listen((results) {
+    scanResults = results;
+  });
+  
+  await Future.delayed(Duration(seconds: 15)); // 延长等待时间以确保扫描完成
 
-    await Future.delayed(Duration(seconds: 4));
-
-    String bluetoothData = scanResults.map((result) => result.device.id.toString()).join(';');
-    String accessToken = await _getAccessToken();
-    var response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
-    );
-    print(bluetoothData);
-
-    if (response.statusCode == 200) {
-      print('Bluetooth data sent successfully');
-    } else {
-      print('Failed to send Bluetooth data. Error: ${response.reasonPhrase}');
-    }
+  // 处理扫描结果
+  List<String> bluetoothDataList = [];
+  for (var result in scanResults) {
+    String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
+    String deviceId = result.device.id.toString();
+    bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
   }
+  
+  String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
+  String accessToken = await _getAccessToken();
+  
+  var response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
+  );
+  
+  if (response.statusCode == 200) {
+    print('Bluetooth data sent successfully');
+  } else {
+    print('Failed to send Bluetooth data: ${response.statusCode}');
+  }
+}
 
   Future<bool> requestLocationPermission() async {
     PermissionStatus status = await Permission.location.request();
@@ -413,6 +451,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 }
+
 // 取消计时器的函数
 void cancelTimers() {
   _accTimer?.cancel();

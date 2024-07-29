@@ -13,16 +13,17 @@ import 'data_observation_page.dart';
 import 'register.dart';
 import 'forgot_password.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:amap_flutter_base/amap_flutter_base.dart';
+
+Timer? _accTimer;
+Timer? _gpsTimer;
+Timer? _btTimer;
 
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
-
-  Timer? _accTimer;
-  Timer? _gpsTimer;
-  Timer? _btTimer;
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
@@ -36,13 +37,22 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _getDeviceInfo();
+    _startListeningToAccelerometer();
+  }
+
+  void _startListeningToAccelerometer() {
+    _accelerometerSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
+      setState(() {
+        _accelerometerValues = [event.x, event.y, event.z];
+      });
+    });
   }
 
   void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency) {
     _accTimer = Timer.periodic(Duration(seconds: accFrequency), (timer) async {
       await collectAndSendACCData();
     });
-    _gpsTimer = Timer.periodic(Duration(minutes: gpsFrequency), (timer) async {
+    _gpsTimer = Timer.periodic(Duration(seconds: gpsFrequency), (timer) async {
       await collectAndSendGPSData();
     });
     _btTimer = Timer.periodic(Duration(minutes: btFrequency), (timer) async {
@@ -106,13 +116,15 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => DataObservationPage()),
           );
         } else {
+          Map<String, dynamic> responseData = json.decode(response.body);
+          String message = responseData['message'];
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: ${response.body}')),
+            SnackBar(content: Text('Login failed: $message')),
           );
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e 请检查您的账号密码')),
+          SnackBar(content: Text('登陆失败! 请检查您的账号和密码')),
         );
       }
     }
@@ -173,75 +185,95 @@ class _LoginPageState extends State<LoginPage> {
       },
       body: jsonEncode(data),
     );
+
     if (response.statusCode == 200) {
       print('Accelerometer data sent successfully');
-      print(_accelerometerValues[0]);
     } else {
       print('Failed to send accelerometer data. Error: ${response.reasonPhrase}');
     }
   }
 
   Future<void> collectAndSendGPSData([String? deviceInfo]) async {
-    bool hasLocationPermission = await requestLocationPermission();
-    if (!hasLocationPermission) {
-      print('定位权限申请不通过');
-      return;
-    }
-
-    AMapFlutterLocation locationPlugin = AMapFlutterLocation();
-    AMapFlutterLocation.updatePrivacyShow(true, true);
-    AMapFlutterLocation.updatePrivacyAgree(true);
-    AMapFlutterLocation.setApiKey("d33074d34e5524ed087ce820363a1779", "IOS Api Key");
-
-    bool isConnected = true;
-    AMapLocationOption locationOption = AMapLocationOption();
-    locationOption.onceLocation = true;
-    locationOption.needAddress = false;
-    locationOption.locationMode = isConnected ? AMapLocationMode.Hight_Accuracy : AMapLocationMode.Device_Sensors;
-    locationOption.desiredAccuracy = DesiredAccuracy.Best;
-    locationOption.geoLanguage = GeoLanguage.DEFAULT;
-    locationPlugin.setLocationOption(locationOption);
-
-    Completer<Map<String, Object>> completer = Completer();
-    locationPlugin.onLocationChanged().listen((Map<String, Object> result) {
-      if (!completer.isCompleted) {
-        completer.complete(result);
-        locationPlugin.stopLocation();
-      }
-    });
-
-    locationPlugin.startLocation();
-    Map<String, Object> locationResult = await completer.future;
-
-    double latitude = locationResult['latitude'] as double;
-    double longitude = locationResult['longitude'] as double;
-    double accuracy = locationResult['accuracy'] as double;
-
-    deviceInfo ??= _deviceInfo;
-
-    Map<String, dynamic> data = {
-      'longitude': longitude,
-      'device': deviceInfo,
-      'latitude': latitude,
-      'accuracy': accuracy,
-    };
-
-    String accessToken = await _getAccessToken();
-
-    var response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
-    );
-    if (response.statusCode == 200) {
-      print('GPS data sent successfully');
-    } else {
-      print('Failed to send GPS data. Error: ${response.reasonPhrase}');
-    }
+  bool hasLocationPermission = await requestLocationPermission();
+  if (!hasLocationPermission) {
+    print('定位权限申请不通过');
+    return;
   }
+
+  AMapFlutterLocation locationPlugin = AMapFlutterLocation();
+  AMapFlutterLocation.updatePrivacyShow(true, true);
+  AMapFlutterLocation.updatePrivacyAgree(true);
+  AMapFlutterLocation.setApiKey("d33074d34e5524ed087ce820363a1779", "IOS Api Key");
+
+  bool isConnected = true;
+  AMapLocationOption locationOption = AMapLocationOption();
+  locationOption.onceLocation = true;
+  locationOption.needAddress = false;
+  locationOption.locationMode = isConnected ? AMapLocationMode.Hight_Accuracy : AMapLocationMode.Device_Sensors;
+  locationOption.desiredAccuracy = DesiredAccuracy.Best;
+  locationOption.geoLanguage = GeoLanguage.DEFAULT;
+  locationPlugin.setLocationOption(locationOption);
+
+  Completer<Map<String, Object>> completer = Completer();
+  locationPlugin.onLocationChanged().listen((Map<String, Object> result) {
+    if (!completer.isCompleted) {
+      completer.complete(result);
+      locationPlugin.stopLocation();
+    }
+  });
+
+  locationPlugin.startLocation();
+  Map<String, Object> locationResult = await completer.future;
+
+  double latitude = locationResult['latitude'] as double;
+  double longitude = locationResult['longitude'] as double;
+  double accuracy = locationResult['accuracy'] as double;
+
+  deviceInfo ??= _deviceInfo;
+
+  Map<String, dynamic> data = {
+    'longitude': longitude,
+    'device': deviceInfo,
+    'latitude': latitude,
+    'accuracy': accuracy,
+  };
+
+  String accessToken = await _getAccessToken();
+
+  var response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode(data),
+  );
+  if (response.statusCode == 200) {
+    print('GPS data sent successfully');
+
+    Map<String, dynamic> responseData = json.decode(response.body);
+    int flag = responseData['flag'];
+
+    if (flag == 1) {
+      double longitudeMin = responseData['longitude_min'];
+      double longitudeMax = responseData['longitude_max'];
+      double latitudeMin = responseData['latitude_min'];
+      double latitudeMax = responseData['latitude_max'];
+
+      // 保存坐标范围到本地存储
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('longitude_min', longitudeMin);
+      await prefs.setDouble('longitude_max', longitudeMax);
+      await prefs.setDouble('latitude_min', latitudeMin);
+      await prefs.setDouble('latitude_max', latitudeMax);
+      
+      print('Coordinate range saved to storage.');
+    }
+  } else {
+    print('Failed to send GPS data. Error: ${response.reasonPhrase}');
+  }
+}
+
 
   Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
     deviceInfo ??= _deviceInfo;
@@ -261,16 +293,11 @@ class _LoginPageState extends State<LoginPage> {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
-      
       body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
     );
-    print(bluetoothData);
-
     if (response.statusCode == 200) {
       print('Bluetooth data sent successfully');
-    } else {
-      print('Failed to send Bluetooth data. Error: ${response.reasonPhrase}');
-    }
+    } 
   }
 
   Future<bool> requestLocationPermission() async {
@@ -403,12 +430,14 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 }
+
 // 取消计时器的函数
 void cancelTimers() {
   _accTimer?.cancel();
   _gpsTimer?.cancel();
   _btTimer?.cancel();
 }
+
 void main() {
   runApp(MaterialApp(
     home: LoginPage(),

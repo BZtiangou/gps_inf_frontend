@@ -45,7 +45,9 @@
         
     <!--后台获取位置信息，若需后台定位则必选-->
         <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    
+        <!-- 电池优化白名单 -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!--允许获取粗略位置，粗略定位必选-->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
         <!--允许获取设备和运营商信息，用于问题排查和网络定位（无gps情况下的定位），若需网络定位功能则必选-->

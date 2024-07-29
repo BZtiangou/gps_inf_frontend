@@ -109,8 +109,6 @@ class _MyInfoPageState extends State<MyInfoPage> {
               return ListView(
                 padding: EdgeInsets.all(16.0),
                 children: [
-                  _buildInfoTile('用户名', userInfo['username'] ?? '暂未登记', 'username'),
-                  Divider(),
                   _buildInfoTile('姓名', userInfo['name'] ?? '暂未登记', 'name'),
                   Divider(),
                   _buildInfoTile('性别', userInfo['gender'] ?? '暂未登记', 'gender'),
