@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'person.dart'; // 导入person.dart文件
 import 'experiment.dart'; // 导入experiment.dart文件
+import 'btlabel.dart'; // 导入蓝牙数据标注页面
 import 'main.dart';
 
 void main() {
@@ -324,6 +325,12 @@ class _DataObservationPageState extends State<DataObservationPage> {
               label: '问卷',
               onTap: () => _showQuestionnaireAlert(),
             ),
+            _buildGridItem(
+              context,
+              icon: Icons.label,
+              label: '蓝牙标注',
+              onTap: () => _navigateToBtLabelPage(context), // 新增入口
+            ),
           ],
         ),
       ),
@@ -412,6 +419,13 @@ class _DataObservationPageState extends State<DataObservationPage> {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => AccObservationPage()),
+    );
+  }
+
+  void _navigateToBtLabelPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BtLabelPage()),
     );
   }
 }
