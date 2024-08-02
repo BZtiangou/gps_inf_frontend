@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -32,16 +31,26 @@ class BtLabelPage extends StatefulWidget {
   _BtLabelPageState createState() => _BtLabelPageState();
 }
 
-class _BtLabelPageState extends State<BtLabelPage> {
+class _BtLabelPageState extends State<BtLabelPage> with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> _devices = [];
   String _selectedDevice = '';
   String _label = '';
   bool _isLabelInputVisible = false;
+  late TabController _tabController;
+  TextEditingController _labelController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _fetchDevices();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _labelController.dispose(); // Dispose the controller when the widget is disposed
+    super.dispose();
   }
 
   void _fetchDevices() async {
@@ -81,6 +90,7 @@ class _BtLabelPageState extends State<BtLabelPage> {
           _fetchDevices();
           _isLabelInputVisible = false;
           _label = '';
+          _labelController.clear(); // Clear the text field
         });
       } else {
         print("Failed to update label");
@@ -90,11 +100,39 @@ class _BtLabelPageState extends State<BtLabelPage> {
     }
   }
 
+  List<Widget> _buildDeviceList(bool isLabeled) {
+    List<Map<String, dynamic>> filteredDevices = _devices.where((device) {
+      return (device['label']?.isNotEmpty ?? false) == isLabeled;
+    }).toList();
+
+    return filteredDevices.map((device) {
+      return ListTile(
+        title: Text(device['bt_device']),
+        subtitle: Text(isLabeled ? "已标注为: ${device['label']}。点击可进行修改" : '未标注，点击标注'),
+        onTap: () {
+          setState(() {
+            _selectedDevice = device['bt_device'];
+            _label = device['label'] ?? '';
+            _labelController.text = _label; // Update the text field with the existing label
+            _isLabelInputVisible = true;
+          });
+        },
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('蓝牙标注页面'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: '未标注'),
+            Tab(text: '已标注'),
+          ],
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -113,23 +151,16 @@ class _BtLabelPageState extends State<BtLabelPage> {
           child: Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  itemCount: _devices.length,
-                  itemBuilder: (context, index) {
-                    final device = _devices[index];
-                    final isLabeled = device['label']?.isNotEmpty ?? false;
-                    return ListTile(
-                      title: Text(device['bt_device']),
-                      subtitle: Text(isLabeled ? "已标注为: ${device['label']}。点击可进行修改" : '未标注，点击标注'),
-                      onTap: () {
-                        setState(() {
-                          _selectedDevice = device['bt_device'];
-                          _label = device['label'] ?? '';
-                          _isLabelInputVisible = true;
-                        });
-                      },
-                    );
-                  },
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    ListView(
+                      children: _buildDeviceList(false),
+                    ),
+                    ListView(
+                      children: _buildDeviceList(true),
+                    ),
+                  ],
                 ),
               ),
               if (_isLabelInputVisible)
@@ -137,12 +168,12 @@ class _BtLabelPageState extends State<BtLabelPage> {
                   children: [
                     TextField(
                       decoration: InputDecoration(labelText: '输入标注'),
+                      controller: _labelController,
                       onChanged: (value) {
                         setState(() {
                           _label = value;
                         });
                       },
-                      controller: TextEditingController(text: _label),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -157,6 +188,7 @@ class _BtLabelPageState extends State<BtLabelPage> {
                               _selectedDevice = '';
                               _label = '';
                               _isLabelInputVisible = false;
+                              _labelController.clear(); // Clear the text field
                             });
                           },
                           child: Text('取消'),

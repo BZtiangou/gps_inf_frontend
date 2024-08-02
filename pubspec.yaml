@@ -25,7 +25,8 @@ dependencies:
   amap_flutter_base: ^3.0.0 # flutter2空安全新版本
   amap_flutter_map: ^3.0.0 # flutter2空安全新版本
   amap_flutter_location: ^3.0.0 # flutter2空安全新版本
-  coordtransform: ^1.0.1
+  coordtransform: ^1.0.1  
+  connectivity_plus: ^3.0.3 # 获取网络连接状态
   intl: ^0.18.0 
 
 dev_dependencies:
