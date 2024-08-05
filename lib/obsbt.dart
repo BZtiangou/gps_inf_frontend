@@ -170,7 +170,7 @@ class _BluetoothListScreenState extends State<BluetoothListScreen> {
                             children: [
                               Text(timestamp, style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold)),
                               SizedBox(height: 4.0),
-                              Text('mac地址： $macAddress'),
+                              Text('设备信息： $macAddress'),
                             ],
                           ),
                         ),

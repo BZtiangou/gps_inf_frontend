@@ -10,6 +10,7 @@ import 'person.dart'; // 导入person.dart文件
 import 'experiment.dart'; // 导入experiment.dart文件
 import 'btlabel.dart'; // 导入蓝牙数据标注页面
 import 'main.dart';
+import 'exp_histroy.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -331,6 +332,13 @@ class _DataObservationPageState extends State<DataObservationPage> {
               label: '蓝牙标注',
               onTap: () => _navigateToBtLabelPage(context), // 新增入口
             ),
+              _buildGridItem(
+              context,
+              icon: Icons.history,
+              label: '实验历史',
+              onTap: () => _navigateToExpHistoryPage(context), // 新增入口
+            ),
+            
           ],
         ),
       ),
@@ -426,6 +434,12 @@ class _DataObservationPageState extends State<DataObservationPage> {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => BtLabelPage()),
+    );
+  }
+    void _navigateToExpHistoryPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ExperimentHistoryPage()),
     );
   }
 }

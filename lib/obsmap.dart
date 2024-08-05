@@ -42,6 +42,32 @@ Future<void> fetchGPSData(Map<String, Marker> initMarkerMap) async {
   }
 }
 
+Future<Map<String, dynamic>?> fetchClusterName(LatLng position) async {
+  String accessToken = await getAccessToken();
+
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getGpsName/');
+  var response = await http.post(
+    url,
+    headers: {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'longitude': position.longitude,
+      'latitude': position.latitude,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    var jsonData = jsonDecode(utf8.decode(response.bodyBytes));
+    return jsonData;
+  } else if (response.statusCode == 404) {
+    return null;
+  } else {
+    throw Exception('Failed to fetch cluster name');
+  }
+}
+
 Future<void> fetchClusterData(BuildContext context) async {
   String accessToken = await getAccessToken();
   var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/get_gpscluster/');
@@ -237,15 +263,6 @@ void _createPolygons() {
     );
     newPolygons.add(polygon);
   }
-  // 加载已经标注的多边形
-  for (Polygon polygon in polygonsss) {
-    
-    print("polygon.fillColor: ${polygon.points}");
-    if (polygon.fillColor == Colors.blue.withOpacity(0.2)) {
-      newPolygons.add(polygon);
-    }
-  }
-
   setState(() {
     polygonsss = newPolygons;
     map = AMapWidget(
@@ -369,21 +386,36 @@ Future<void> _updatePendingGpsInPreferences() async {
 
 
 
-void _handleFinishMapTap(LatLng position) {
+void _handleFinishMapTap(LatLng position) async {
   for (Polygon polygon in polygonsss) {
     if (_isPointInPolygon(position, polygon.points)) {
-      // 检查多边形颜色是否为红色
+      // 检查多边形颜色
       if (polygon.fillColor == Colors.red.withOpacity(0.2)) {
         // 红色未标注多边形，触发标注流程
         _handleSaveLabelMapTap(position);
-      } else {
-        // 非红色多边形，显示已完成标注的对话框
-        _showClusterNameDialog(context, "此地已完成标注");
-      }
+      } else if (polygon.fillColor == Colors.blue.withOpacity(0.2)) {
+        // 蓝色多边形，获取 cluster_name
+        try {
+          Map<String, dynamic>? clusterData = await fetchClusterName(position);
+          String? clusterName = clusterData?['cluster_name'];
+          var labelPosition =  LatLng(clusterData?["latitude"], clusterData?["longitude"]);
+          if (clusterName != null) {
+            _showClusterNameDialog(context, labelPosition,"此地已完成标注\n聚类名: $clusterName");
+          } else {
+            _showClusterNameDialog(context, labelPosition,"此地已完成标注\n但聚类名丢失,请重试");
+          }
+        } catch (e) {
+          // 显示错误消息
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('获取 cluster_name 失败: $e')),
+          );
+        }
+      } 
       break;
     }
   }
 }
+
 
 
   bool _isPointInPolygon(LatLng point, List<LatLng> polygonPoints) {
@@ -409,25 +441,62 @@ void _handleFinishMapTap(LatLng position) {
     return oddNodes;
   }
 
-  Future<void> _showClusterNameDialog(BuildContext context, String clusterName) async {
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Cluster Name'),
-          content: Text(clusterName),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+
+Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,String clusterName) async {
+  TextEditingController _textFieldController = TextEditingController();
+  _textFieldController.text = ""; // Default placeholder text
+
+  await showDialog<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('聚类信息'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(clusterName),
+            TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(
+                hintText: "输入新的标注",
+              ),
             ),
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('取消'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('确定'),
+            onPressed: () async {
+              String newLabel = _textFieldController.text;
+              if (newLabel.isNotEmpty && newLabel != "在此修改标注") {
+                try {
+                  await saveLabel(labelPosition, newLabel);
+                  // Display success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('标注信息已修改')),
+                  );
+                } catch (e) {
+                  // Display error message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('标注信息保存失败: $e')),
+                  );
+                }
+              }
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Widget build(BuildContext context) {
     return Container(

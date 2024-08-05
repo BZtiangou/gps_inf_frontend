@@ -98,7 +98,7 @@ class PersonPage extends StatelessWidget {
             SizedBox(height: 24.0),
             ListTile(
               leading: Icon(Icons.science, color: Colors.grey),
-              title: Text('实验详情'),
+              title: Text('当前实验'),
               onTap: () async {
                 try {
                   Map<String, dynamic> experimentDetails = await fetchExperimentDetails();
@@ -133,7 +133,7 @@ class PersonPage extends StatelessWidget {
                     builder: (BuildContext context) {
                       return AlertDialog(
                         title: Text('错误'),
-                        content: Text('获取实验详情失败，请稍后再试。'),
+                        content: Text('请先选择一个实验'),
                         actions: [
                           TextButton(
                             child: Text('确定'),

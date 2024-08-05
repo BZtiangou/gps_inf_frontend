@@ -271,26 +271,68 @@ Future<void> collectAndSendGPSData([String? deviceInfo]) async {
   }
 }
 
+// 没有强制结束蓝牙数据
+// Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
+//   deviceInfo ??= _deviceInfo; // 使用默认设备信息
+  
+//   await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+  
+//   // 收集扫描结果
+//   List<ScanResult> scanResults = [];
+//   FlutterBluePlus.scanResults.listen((results) {
+//     scanResults = results;
+//   });
+  
+//   await Future.delayed(Duration(seconds: 15)); // 延长等待时间以确保扫描完成
+
+//   // 处理扫描结果
+//   List<String> bluetoothDataList = [];
+//   for (var result in scanResults) {
+//     String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
+//     String deviceId = result.device.id.toString();
+//     bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
+//   }
+  
+//   String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
+//   String accessToken = await _getAccessToken();
+  
+//   var response = await http.post(
+//     Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
+//     headers: {
+//       'Content-Type': 'application/json',
+//       'Authorization': 'Bearer $accessToken',
+//     },
+//     body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
+//   );
+  
+//   if (response.statusCode == 200) {
+//     print('Bluetooth data sent successfully');
+//   } else {
+//     print('Failed to send Bluetooth data: ${response.statusCode}');
+//   }
+// }
 Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   deviceInfo ??= _deviceInfo; // 使用默认设备信息
   
-  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
-  
-  // 收集扫描结果
   List<ScanResult> scanResults = [];
+  List<String> bluetoothDataList = [];
+  
+  // 监听扫描结果
   FlutterBluePlus.scanResults.listen((results) {
     scanResults = results;
+    // 处理扫描结果
+    for (var result in scanResults) {
+      String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
+      String deviceId = result.device.id.toString();
+      bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
+    }
   });
-  
-  await Future.delayed(Duration(seconds: 15)); // 延长等待时间以确保扫描完成
 
-  // 处理扫描结果
-  List<String> bluetoothDataList = [];
-  for (var result in scanResults) {
-    String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
-    String deviceId = result.device.id.toString();
-    bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
-  }
+  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+  await Future.delayed(Duration(seconds: 15)); // 等待扫描完成
+  
+  // 确保停止扫描
+  await FlutterBluePlus.stopScan();
   
   String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
   String accessToken = await _getAccessToken();
@@ -303,7 +345,8 @@ Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
     },
     body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
   );
-  
+    print("BTdatabodyis");
+  print(bluetoothData);
   if (response.statusCode == 200) {
     print('Bluetooth data sent successfully');
   } else {
