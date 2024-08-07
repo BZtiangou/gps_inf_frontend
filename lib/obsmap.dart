@@ -522,7 +522,7 @@ Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,S
       _mapController = controller;
 
       // 延迟调用以确保地图控件加载完成
-      Future.delayed(Duration(milliseconds: 700), () {
+      Future.delayed(Duration(milliseconds: 1500), () {
         _moveCamera();
       });
     });

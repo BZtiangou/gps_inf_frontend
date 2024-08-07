@@ -185,7 +185,9 @@ class PersonPage extends StatelessWidget {
                       content: Text(
                         '本app会根据用户选择的实验，在用户知情的情况下，收集用户的部分信息。'
                         '我们致力于保护您的隐私，所有收集到的信息将严格保密，并仅用于实验相关的目的。'
-                        '如有任何疑问，请随时联系我们的开发者或指导老师。感谢您的理解与配合。'
+                        '请同意授权GPS，蓝牙，网络等权限。'
+                        '如需要更换实验，请在首页先退出当前实验，然后选择新的实验。重新登录后方可生效'
+                        '如有任何疑问，请随时联系开发者+86 17620642718(微信同号)。感谢您的理解与配合。'
                       ),
                       actions: [
                         TextButton(
@@ -197,17 +199,6 @@ class PersonPage extends StatelessWidget {
                       ],
                     );
                   },
-                );
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.science, color: Colors.grey),
-              title: Text('选择实验'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ExperimentSelectionPage()), // 跳转到实验选择页面
                 );
               },
             ),

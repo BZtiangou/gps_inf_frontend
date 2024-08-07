@@ -236,33 +236,92 @@ class _DataObservationPageState extends State<DataObservationPage> {
     }
   }
 
-  Future<void> _exitExperiment() async {
-    try {
-      final response = await http.get(
-        Uri.parse('http://gps.primedigitaltech.com:8000/exp/exitExp/'),
-        headers: {'Authorization': 'Bearer ${await getAccessToken()}'},
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          experimentStatus = '请选择实验';
-        });
-        cancelTimers();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已成功退出实验')),
+void _exitExperiment() async {
+  final phoneNumber = await _showPhoneNumberDialog();
+  if (phoneNumber != null) {
+    final isVerified = await _verifyPhoneNumber(phoneNumber);
+    if (isVerified) {
+      try {
+        final response = await http.get(
+          Uri.parse('http://gps.primedigitaltech.com:8000/exp/exitExp/'),
+          headers: {'Authorization': 'Bearer ${await getAccessToken()}'},
         );
-      } else {
+
+        if (response.statusCode == 200) {
+          setState(() {
+            experimentStatus = '请选择实验';
+          });
+          cancelTimers();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('已成功退出实验')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('退出实验失败: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        print('Error exiting experiment: $e');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('退出实验失败: ${response.body}')),
+          SnackBar(content: Text('退出实验错误: $e')),
         );
       }
-    } catch (e) {
-      print('Error exiting experiment: $e');
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('退出实验错误: $e')),
+        SnackBar(content: Text('手机号验证失败，无法退出实验')),
       );
     }
   }
+}
+
+Future<bool> _verifyPhoneNumber(String phoneNumber) async {
+  String accessToken = await getAccessToken();
+  try {
+    final response = await http.post(
+      Uri.parse('http://gps.primedigitaltech.com:8000/api/checkphone/'),
+      headers: {'Content-Type': 'application/json'
+              ,'Authorization': 'Bearer $accessToken'},
+      body: json.encode({'phone_number': phoneNumber}),
+    );
+
+    return response.statusCode == 200;
+  } catch (e) {
+    print('Error verifying phone number: $e');
+    return false;
+  }
+}
+
+Future<String?> _showPhoneNumberDialog() async {
+  TextEditingController phoneController = TextEditingController();
+  return showDialog<String>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('验证手机号'),
+        content: TextField(
+          controller: phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(hintText: '请输入手机号'),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('取消'),
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+          ),
+          TextButton(
+            child: Text('确认'),
+            onPressed: () {
+              Navigator.of(context).pop(phoneController.text);
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   void dispose() {
