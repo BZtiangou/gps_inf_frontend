@@ -180,7 +180,7 @@ class _LoginPageState extends State<LoginPage> {
     String accessToken = await _getAccessToken(); // Get access token from SharedPreferences
 
     final response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateAcc/'),
+      Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateAcc/'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
@@ -253,7 +253,7 @@ Future<void> collectAndSendGPSData([String? deviceInfo]) async {
   String accessToken = await _getAccessToken();
 
   var response = await http.post(
-    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateLocation/'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
@@ -313,39 +313,46 @@ Future<void> collectAndSendGPSData([String? deviceInfo]) async {
 // }
 Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   deviceInfo ??= _deviceInfo; // 使用默认设备信息
-  
-  List<ScanResult> scanResults = [];
+
   List<String> bluetoothDataList = [];
-  
+  Set<String> deviceSet = {}; // 用于去重
+
+  // 开始扫描
+  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+
   // 监听扫描结果
   FlutterBluePlus.scanResults.listen((results) {
-    scanResults = results;
-    // 处理扫描结果
-    for (var result in scanResults) {
+    for (var result in results) {
       String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
       String deviceId = result.device.id.toString();
-      bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
+      String deviceInfo = '$deviceName:$deviceId';
+
+      if (!deviceSet.contains(deviceInfo)) {
+        deviceSet.add(deviceInfo);
+        bluetoothDataList.add(deviceInfo); // 组合名称和 MAC 地址
+      }
     }
   });
 
-  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
-  await Future.delayed(Duration(seconds: 15)); // 等待扫描完成
-  
-  // 确保停止扫描
+  // 等待扫描完成
+  await Future.delayed(Duration(seconds: 15));
+
+  // 停止扫描
   await FlutterBluePlus.stopScan();
-  
+
   String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
   String accessToken = await _getAccessToken();
-  
+
   var response = await http.post(
-    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateBT/'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     },
     body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
   );
-    print("BTdatabodyis");
+
+  print("BTdatabodyis");
   print(bluetoothData);
   if (response.statusCode == 200) {
     print('Bluetooth data sent successfully');

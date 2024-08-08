@@ -50,7 +50,7 @@ class _BluetoothListScreenState extends State<BluetoothListScreen> {
 
   Future<void> fetchAndDisplayBTData() async {
     String accessToken = await getAccessToken();
-    var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getBTdata/');
+    var url = Uri.parse('http://gps.primedigitaltech.com:8000/sensor/getBTdata/');
     try {
       var response = await http.get(
         url,

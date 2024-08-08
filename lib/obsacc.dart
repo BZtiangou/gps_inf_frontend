@@ -16,7 +16,7 @@ Future<String> getAccessToken() async {
 
 Future<void> fetchAndDisplayACCData(List<List<double>> dataPoints, List<String> dt) async {
   String accessToken = await getAccessToken();
-  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getACCdata/');
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/sensor/getACCdata/');
   try {
     var response = await http.get(url, headers: {
       'Authorization': 'Bearer $accessToken',

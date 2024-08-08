@@ -57,7 +57,7 @@ class _BtLabelPageState extends State<BtLabelPage> with SingleTickerProviderStat
     try {
       String accessToken = await getAccessToken();
       final response = await http.get(
-        Uri.parse('http://gps.primedigitaltech.com:8000/api/getBTLabel/'),
+        Uri.parse('http://gps.primedigitaltech.com:8000/analysis/getBTLabel/'),
         headers: {
           'Authorization': 'Bearer $accessToken',
         },
@@ -78,7 +78,7 @@ class _BtLabelPageState extends State<BtLabelPage> with SingleTickerProviderStat
     try {
       String accessToken = await getAccessToken();
       final response = await http.post(
-        Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBTlabel/'),
+        Uri.parse('http://gps.primedigitaltech.com:8000/analysis/updateBTlabel/'),
         body: json.encode({'bt_device': _selectedDevice, 'label': _label}),
         headers: {
           'Authorization': 'Bearer $accessToken',

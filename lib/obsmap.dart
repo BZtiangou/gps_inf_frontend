@@ -20,7 +20,7 @@ Future<String> getAccessToken() async {
 Future<void> fetchGPSData(Map<String, Marker> initMarkerMap) async {
   String accessToken = await getAccessToken();
 
-  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getGPSdata/');
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/sensor/getGPSdata/');
   var response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
   });
@@ -45,7 +45,7 @@ Future<void> fetchGPSData(Map<String, Marker> initMarkerMap) async {
 Future<Map<String, dynamic>?> fetchClusterName(LatLng position) async {
   String accessToken = await getAccessToken();
 
-  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/getGpsName/');
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/analysis/getGpsName/');
   var response = await http.post(
     url,
     headers: {
@@ -70,7 +70,7 @@ Future<Map<String, dynamic>?> fetchClusterName(LatLng position) async {
 
 Future<void> fetchClusterData(BuildContext context) async {
   String accessToken = await getAccessToken();
-  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/get_gpscluster/');
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/analysis/get_gpscluster/');
   var response = await http.get(url, headers: {
     'Authorization': 'Bearer $accessToken',
   });
@@ -124,7 +124,7 @@ List<LatLng> _createPolygonPoints(LatLng center) {
 Future<void> saveLabel(LatLng position, String label) async {
   String accessToken = await getAccessToken();
 
-  var url = Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLabel/');
+  var url = Uri.parse('http://gps.primedigitaltech.com:8000/analysis/updateLabel/');
   var response = await http.post(
     url,
     headers: {
