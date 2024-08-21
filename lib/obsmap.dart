@@ -301,11 +301,11 @@ void _handleSaveLabelMapTap(LatLng position) async {
   String? label = await showDialog<String>(
     context: context,
     builder: (BuildContext context) {
-      TextEditingController _textFieldController = TextEditingController();
+      TextEditingController textFieldController = TextEditingController();
       return AlertDialog(
         title: Text('输入标注信息'),
         content: TextField(
-          controller: _textFieldController,
+          controller: textFieldController,
           decoration: InputDecoration(hintText: "输入标签"),
         ),
         actions: <Widget>[
@@ -318,7 +318,7 @@ void _handleSaveLabelMapTap(LatLng position) async {
           TextButton(
             child: Text('确定'),
             onPressed: () {
-              Navigator.of(context).pop(_textFieldController.text); // 返回输入的标签
+              Navigator.of(context).pop(textFieldController.text); // 返回输入的标签
             },
           ),
         ],
@@ -443,8 +443,8 @@ void _handleFinishMapTap(LatLng position) async {
 
 
 Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,String clusterName) async {
-  TextEditingController _textFieldController = TextEditingController();
-  _textFieldController.text = ""; // Default placeholder text
+  TextEditingController textFieldController = TextEditingController();
+  textFieldController.text = ""; // Default placeholder text
 
   await showDialog<void>(
     context: context,
@@ -456,7 +456,7 @@ Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,S
           children: <Widget>[
             Text(clusterName),
             TextField(
-              controller: _textFieldController,
+              controller: textFieldController,
               decoration: InputDecoration(
                 hintText: "输入新的标注",
               ),
@@ -473,7 +473,7 @@ Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,S
           TextButton(
             child: Text('确定'),
             onPressed: () async {
-              String newLabel = _textFieldController.text;
+              String newLabel = textFieldController.text;
               if (newLabel.isNotEmpty && newLabel != "在此修改标注") {
                 try {
                   await saveLabel(labelPosition, newLabel);
@@ -498,6 +498,7 @@ Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,S
 }
 
 
+  @override
   Widget build(BuildContext context) {
     return Container(
       child: ConstrainedBox(
@@ -505,7 +506,7 @@ Future<void> _showClusterNameDialog(BuildContext context,LatLng labelPosition ,S
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Container(
+            SizedBox(
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
               child: map,

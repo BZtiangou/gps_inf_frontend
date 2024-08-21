@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 
 class BatteryOptimization {
   static const MethodChannel _channel =
-      const MethodChannel('battery_optimization');
+      MethodChannel('battery_optimization');
 
   static Future<void> requestIgnoreBatteryOptimizations() async {
     try {

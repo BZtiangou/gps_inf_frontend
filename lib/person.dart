@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'data_observation_page.dart'; // 导入data_observation_page.dart文件以便导航回首页
 import 'main.dart'; // 导入main.dart文件以便导航至登录页面
-import 'experiment.dart'; // 导入experiment_selection_page.dart文件以便导航至实验选择页面
+// 导入experiment_selection_page.dart文件以便导航至实验选择页面
 import 'my_info.dart'; // 导入my_info.dart文件以便导航至我的信息页面
 import 'package:shared_preferences/shared_preferences.dart';
 

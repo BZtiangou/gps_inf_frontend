@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main.dart';
 import 'data_observation_page.dart';
 
 class ExperimentSelectionPage extends StatefulWidget {
@@ -155,9 +154,10 @@ class _ExperimentSelectionPageState extends State<ExperimentSelectionPage> {
                         Text('描述: ${experiment['description']}'),
                         Text('开始时间: ${experiment['start_time']}'),
                         Text('结束时间: ${experiment['end_time']}'),
-                        Text('GPS 频率: ${experiment['gps_frequency']}'),
-                        Text('加速度计频率: ${experiment['acc_frequency']}'),
-                        Text('蓝牙频率: ${experiment['bt_frequency']}'),
+                        Text('GPS 间隔: ${experiment['gps_frequency']}min'),
+                        Text('蓝牙间隔: ${experiment['bt_frequency']}min'),             
+                        Text('加速度计间隔: ${experiment['acc_frequency']}sec'),
+                        Text('角速度间隔: ${experiment['bt_frequency']}sec')
                       ],
                     ),
                     actions: [
@@ -179,10 +179,10 @@ class _ExperimentSelectionPageState extends State<ExperimentSelectionPage> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => _joinExperiment(experiment['exp_name']),
-                child: Text('加入实验'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                 ),
+                child: Text('加入实验'),
               ),
             ),
           ],

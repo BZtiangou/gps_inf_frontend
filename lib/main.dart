@@ -19,6 +19,8 @@ import 'battery_optimization.dart';
 Timer? _accTimer;
 Timer? _gpsTimer;
 Timer? _btTimer;
+Timer? _gyroTimer;
+
 
 class LoginPage extends StatefulWidget {
   @override
@@ -29,6 +31,8 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  List<double> _gyroscopeValues = [0.0, 0.0, 0.0];
+  StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
 
   List<double> _accelerometerValues = [0.0, 0.0, 0.0];
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
@@ -39,6 +43,7 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     _getDeviceInfo();
     _startListeningToAccelerometer();
+    _startListeningToGyroscope(); // 启动陀螺仪监听
     BatteryOptimization.requestIgnoreBatteryOptimizations();
   }
 
@@ -49,8 +54,15 @@ class _LoginPageState extends State<LoginPage> {
       });
     });
   }
+  void _startListeningToGyroscope() {
+  _gyroscopeSubscription = gyroscopeEvents.listen((GyroscopeEvent event) {
+    setState(() {
+      _gyroscopeValues = [event.x, event.y, event.z];
+    });
+  });
+}
 
-  void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency) {
+  void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency,int gyroFrequency) {
     _accTimer = Timer.periodic(Duration(seconds: accFrequency), (timer) async {
       await collectAndSendACCData();
     });
@@ -60,6 +72,9 @@ class _LoginPageState extends State<LoginPage> {
     _btTimer = Timer.periodic(Duration(minutes: btFrequency), (timer) async {
       await collectAndSendBluetoothData();
     });
+    _gyroTimer = Timer.periodic(Duration(seconds: gyroFrequency), (timer) async {
+    await collectAndSendGyroData();
+     });
   }
 
   Future<void> _getDeviceInfo() async {
@@ -148,8 +163,9 @@ class _LoginPageState extends State<LoginPage> {
           int gpsFrequency = experiment['gps_frequency'];
           int accFrequency = experiment['acc_frequency'];
           int btFrequency = experiment['bt_frequency'];
+          int gyroFrequency = experiment['gyro_frequency'];
           // 启动后台任务
-          startBackgroundTasks(gpsFrequency, accFrequency, btFrequency);
+          startBackgroundTasks(gpsFrequency, accFrequency, btFrequency,gyroFrequency);
           // 根据频率值自动化上传传感器信息
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -194,6 +210,34 @@ class _LoginPageState extends State<LoginPage> {
       print('Failed to send accelerometer data. Error: ${response.reasonPhrase}');
     }
   }
+
+  Future<void> collectAndSendGyroData([String? deviceInfo]) async {
+  deviceInfo ??= _deviceInfo;
+  Map<String, dynamic> data = {
+    'x': '${_gyroscopeValues[0]}',
+    'y': '${_gyroscopeValues[1]}',
+    'z': '${_gyroscopeValues[2]}',
+    'device': deviceInfo,
+  };
+
+  String accessToken = await _getAccessToken(); // Get access token from SharedPreferences
+
+  final response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateGyro/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode(data),
+  );
+
+  if (response.statusCode == 200) {
+    print('Gyroscope data sent successfully');
+  } else {
+    print('Failed to send gyroscope data. Error: ${response.reasonPhrase}');
+  }
+}
+
 
 Future<void> collectAndSendGPSData([String? deviceInfo]) async {
   bool hasLocationPermission = await requestLocationPermission();
@@ -271,46 +315,6 @@ Future<void> collectAndSendGPSData([String? deviceInfo]) async {
   }
 }
 
-// 没有强制结束蓝牙数据
-// Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
-//   deviceInfo ??= _deviceInfo; // 使用默认设备信息
-  
-//   await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
-  
-//   // 收集扫描结果
-//   List<ScanResult> scanResults = [];
-//   FlutterBluePlus.scanResults.listen((results) {
-//     scanResults = results;
-//   });
-  
-//   await Future.delayed(Duration(seconds: 15)); // 延长等待时间以确保扫描完成
-
-//   // 处理扫描结果
-//   List<String> bluetoothDataList = [];
-//   for (var result in scanResults) {
-//     String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
-//     String deviceId = result.device.id.toString();
-//     bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
-//   }
-  
-//   String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
-//   String accessToken = await _getAccessToken();
-  
-//   var response = await http.post(
-//     Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
-//     headers: {
-//       'Content-Type': 'application/json',
-//       'Authorization': 'Bearer $accessToken',
-//     },
-//     body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
-//   );
-  
-//   if (response.statusCode == 200) {
-//     print('Bluetooth data sent successfully');
-//   } else {
-//     print('Failed to send Bluetooth data: ${response.statusCode}');
-//   }
-// }
 Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   deviceInfo ??= _deviceInfo; // 使用默认设备信息
 
@@ -318,7 +322,7 @@ Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   Set<String> deviceSet = {}; // 用于去重
 
   // 开始扫描
-  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
+  await FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
 
   // 监听扫描结果
   FlutterBluePlus.scanResults.listen((results) {
@@ -335,7 +339,7 @@ Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   });
 
   // 等待扫描完成
-  await Future.delayed(Duration(seconds: 15));
+  await Future.delayed(Duration(seconds: 5));
 
   // 停止扫描
   await FlutterBluePlus.stopScan();
@@ -488,6 +492,7 @@ Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
     _gpsTimer?.cancel();
     _btTimer?.cancel();
     _accelerometerSubscription?.cancel();
+    _gyroscopeSubscription?.cancel(); // 取消陀螺仪订阅
     super.dispose();
   }
 }
@@ -497,6 +502,7 @@ void cancelTimers() {
   _accTimer?.cancel();
   _gpsTimer?.cancel();
   _btTimer?.cancel();
+  _gyroTimer?.cancel();
 }
 
 void main() {

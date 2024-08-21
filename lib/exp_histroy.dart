@@ -28,7 +28,7 @@ class _ExperimentHistoryPageState extends State<ExperimentHistoryPage> {
 
   Future<void> _fetchExpHistory() async {
     String accessToken = await getAccessToken();
-    final url = 'http://gps.primedigitaltech.com:8000/exp/seeExpHistory/';
+    const url = 'http://gps.primedigitaltech.com:8000/exp/seeExpHistory/';
     final response = await http.get(
       Uri.parse(url),
       headers: {

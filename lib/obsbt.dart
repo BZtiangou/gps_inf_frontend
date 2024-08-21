@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'data_observation_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
 
 Future<String> getAccessToken() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -15,7 +14,7 @@ Future<String> getAccessToken() async {
 }
 
 class BtObservationPage extends StatelessWidget {
-  const BtObservationPage({Key? key}) : super(key: key);
+  const BtObservationPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +30,7 @@ class BtObservationPage extends StatelessWidget {
 }
 
 class BluetoothListScreen extends StatefulWidget {
-  const BluetoothListScreen({Key? key}) : super(key: key);
+  const BluetoothListScreen({super.key});
 
   @override
   _BluetoothListScreenState createState() => _BluetoothListScreenState();

@@ -1,4 +1,4 @@
-package com.example.your_app_name;
+package com.example.gps_inf;
 
 import android.content.Intent;
 import android.net.Uri;

@@ -13,7 +13,6 @@ import 'data_observation_page.dart';
 import 'register.dart';
 import 'forgot_password.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:amap_flutter_base/amap_flutter_base.dart';
 
 Timer? _accTimer;
 Timer? _gpsTimer;

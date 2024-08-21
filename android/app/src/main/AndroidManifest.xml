@@ -38,8 +38,12 @@
         android:exported="true"/>
         <service
     android:name="com.amap.api.location.APSService"/>
+    <meta-data
+    android:name="com.amap.api.v2.apikey"
+    android:value="d33074d34e5524ed087ce820363a1779" />
     </application>
-    
+    <!-- 访问电池信息 -->
+    <uses-permission android:name="android.permission.BATTERY_STATS" />
     <!--允许获取精确位置，精准定位必选-->
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
         

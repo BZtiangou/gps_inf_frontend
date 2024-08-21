@@ -11,6 +11,8 @@ import 'experiment.dart'; // 导入experiment.dart文件
 import 'btlabel.dart'; // 导入蓝牙数据标注页面
 import 'main.dart';
 import 'exp_histroy.dart';
+import 'obsgyro.dart'; 
+import 'battery.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -397,7 +399,18 @@ Future<String?> _showPhoneNumberDialog() async {
               label: '实验历史',
               onTap: () => _navigateToExpHistoryPage(context), // 新增入口
             ),
-            
+              _buildGridItem(
+              context,
+              icon: Icons.threesixty,
+              label: '角速度',
+              onTap: () => _navigateToGyroPage(context), // 新增入口
+            ),
+              _buildGridItem(
+              context,
+              icon: Icons.battery_4_bar,
+              label: '电池信息',
+              onTap: () => _navigateToBatteryPage(context), // 新增入口
+            ),
           ],
         ),
       ),
@@ -456,7 +469,7 @@ Future<String?> _showPhoneNumberDialog() async {
             ),
             SizedBox(height: 8.0),
             Text(
-              '点击查看我的${label}数据',
+              '点击查看我的$label数据',
               style: TextStyle(
                 fontSize: 12.0,
                 color: Colors.blue[700],
@@ -499,6 +512,18 @@ Future<String?> _showPhoneNumberDialog() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => ExperimentHistoryPage()),
+    );
+  }
+    void _navigateToGyroPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => GyroObservationPage()),
+    );
+  }
+      void _navigateToBatteryPage(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => BatteryInfoPage()),
     );
   }
 }

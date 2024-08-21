@@ -45,7 +45,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
   }
 
   void _showEditDialog(String field, String currentValue, Function(String) onUpdate) {
-    TextEditingController _controller = TextEditingController(text: currentValue);
+    TextEditingController controller = TextEditingController(text: currentValue);
 
     showDialog(
       context: context,
@@ -53,7 +53,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
         return AlertDialog(
           title: Text('请输入新的 $field'),
           content: TextField(
-            controller: _controller,
+            controller: controller,
             decoration: InputDecoration(
               hintText: '请输入新的 $field',
             ),
@@ -68,7 +68,7 @@ class _MyInfoPageState extends State<MyInfoPage> {
             TextButton(
               child: Text('确定'),
               onPressed: () {
-                onUpdate(_controller.text);
+                onUpdate(controller.text);
                 Navigator.of(context).pop();
               },
             ),

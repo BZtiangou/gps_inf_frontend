@@ -13,12 +13,14 @@ import 'data_observation_page.dart';
 import 'register.dart';
 import 'forgot_password.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:amap_flutter_base/amap_flutter_base.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'battery_optimization.dart';
 
 Timer? _accTimer;
 Timer? _gpsTimer;
 Timer? _btTimer;
+Timer? _gyroTimer;
+
 
 class LoginPage extends StatefulWidget {
   @override
@@ -29,6 +31,8 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  List<double> _gyroscopeValues = [0.0, 0.0, 0.0];
+  StreamSubscription<GyroscopeEvent>? _gyroscopeSubscription;
 
   List<double> _accelerometerValues = [0.0, 0.0, 0.0];
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
@@ -39,6 +43,7 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     _getDeviceInfo();
     _startListeningToAccelerometer();
+    _startListeningToGyroscope(); // 启动陀螺仪监听
     BatteryOptimization.requestIgnoreBatteryOptimizations();
   }
 
@@ -49,17 +54,27 @@ class _LoginPageState extends State<LoginPage> {
       });
     });
   }
+  void _startListeningToGyroscope() {
+  _gyroscopeSubscription = gyroscopeEvents.listen((GyroscopeEvent event) {
+    setState(() {
+      _gyroscopeValues = [event.x, event.y, event.z];
+    });
+  });
+}
 
-  void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency) {
-    _accTimer = Timer.periodic(Duration(minutes: accFrequency), (timer) async {
+  void startBackgroundTasks(int gpsFrequency, int accFrequency, int btFrequency,int gyroFrequency) {
+    _accTimer = Timer.periodic(Duration(seconds: accFrequency), (timer) async {
       await collectAndSendACCData();
     });
     _gpsTimer = Timer.periodic(Duration(minutes: gpsFrequency), (timer) async {
       await collectAndSendGPSData();
     });
-    _btTimer = Timer.periodic(Duration(seconds: btFrequency), (timer) async {
+    _btTimer = Timer.periodic(Duration(minutes: btFrequency), (timer) async {
       await collectAndSendBluetoothData();
     });
+    _gyroTimer = Timer.periodic(Duration(seconds: gyroFrequency), (timer) async {
+    await collectAndSendGyroData();
+     });
   }
 
   Future<void> _getDeviceInfo() async {
@@ -148,8 +163,9 @@ class _LoginPageState extends State<LoginPage> {
           int gpsFrequency = experiment['gps_frequency'];
           int accFrequency = experiment['acc_frequency'];
           int btFrequency = experiment['bt_frequency'];
+          int gyroFrequency = experiment['gyro_frequency'];
           // 启动后台任务
-          startBackgroundTasks(gpsFrequency, accFrequency, btFrequency);
+          startBackgroundTasks(gpsFrequency, accFrequency, btFrequency,gyroFrequency);
           // 根据频率值自动化上传传感器信息
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -180,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
     String accessToken = await _getAccessToken(); // Get access token from SharedPreferences
 
     final response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateAcc/'),
+      Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateAcc/'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $accessToken',
@@ -195,125 +211,153 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> collectAndSendGPSData([String? deviceInfo]) async {
-    bool hasLocationPermission = await requestLocationPermission();
-    if (!hasLocationPermission) {
-      print('定位权限申请不通过');
-      return;
-    }
+  Future<void> collectAndSendGyroData([String? deviceInfo]) async {
+  deviceInfo ??= _deviceInfo;
+  Map<String, dynamic> data = {
+    'x': '${_gyroscopeValues[0]}',
+    'y': '${_gyroscopeValues[1]}',
+    'z': '${_gyroscopeValues[2]}',
+    'device': deviceInfo,
+  };
 
-    AMapFlutterLocation locationPlugin = AMapFlutterLocation();
-    AMapFlutterLocation.updatePrivacyShow(true, true);
-    AMapFlutterLocation.updatePrivacyAgree(true);
-    AMapFlutterLocation.setApiKey("d33074d34e5524ed087ce820363a1779", "IOS Api Key");
+  String accessToken = await _getAccessToken(); // Get access token from SharedPreferences
 
-    bool isConnected = true;
-    AMapLocationOption locationOption = AMapLocationOption();
-    locationOption.onceLocation = true;
-    locationOption.needAddress = false;
-    locationOption.locationMode = isConnected ? AMapLocationMode.Hight_Accuracy : AMapLocationMode.Device_Sensors;
-    locationOption.desiredAccuracy = DesiredAccuracy.Best;
-    locationOption.geoLanguage = GeoLanguage.DEFAULT;
-    locationPlugin.setLocationOption(locationOption);
+  final response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateGyro/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode(data),
+  );
 
-    Completer<Map<String, Object>> completer = Completer();
-    locationPlugin.onLocationChanged().listen((Map<String, Object> result) {
-      if (!completer.isCompleted) {
-        completer.complete(result);
-        locationPlugin.stopLocation();
-      }
-    });
-
-    locationPlugin.startLocation();
-    Map<String, Object> locationResult = await completer.future;
-
-    double latitude = locationResult['latitude'] as double;
-    double longitude = locationResult['longitude'] as double;
-    double accuracy = locationResult['accuracy'] as double;
-
-    deviceInfo ??= _deviceInfo;
-
-    Map<String, dynamic> data = {
-      'longitude': longitude,
-      'device': deviceInfo,
-      'latitude': latitude,
-      'accuracy': accuracy,
-    };
-
-    String accessToken = await _getAccessToken();
-
-    var response = await http.post(
-      Uri.parse('http://gps.primedigitaltech.com:8000/api/updateLocation/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken',
-      },
-      body: jsonEncode(data),
-    );
-    if (response.statusCode == 200) {
-      print('GPS data sent successfully');
-
-      Map<String, dynamic> responseData = json.decode(response.body);
-      int flag = responseData['flag'];
-
-      if (flag == 1) {
-        // 更新 pending_gps 列表
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        String? pendingGpsJson = prefs.getString('pending_gps');
-
-        List<LatLng> pendingGps = pendingGpsJson != null
-            ? (jsonDecode(pendingGpsJson) as List<dynamic>)
-                .map((e) => LatLng(e['latitude'], e['longitude']))
-                .toList()
-            : [];
-
-        pendingGps.add(LatLng(latitude, longitude));
-
-        String newPendingGpsJson = jsonEncode(pendingGps.map((e) => {'latitude': e.latitude, 'longitude': e.longitude}).toList());
-        await prefs.setString('pending_gps', newPendingGpsJson);
-
-        print('Coordinate added to pending_gps list.');
-        print(prefs.getString('pending_gps'));
-      }
-
-    } else {
-      print('Failed to send GPS data. Error: ${response.reasonPhrase}');
-    }
+  if (response.statusCode == 200) {
+    print('Gyroscope data sent successfully');
+  } else {
+    print('Failed to send gyroscope data. Error: ${response.reasonPhrase}');
   }
+}
+
+
+Future<void> collectAndSendGPSData([String? deviceInfo]) async {
+  bool hasLocationPermission = await requestLocationPermission();
+  if (!hasLocationPermission) {
+    print('定位权限申请不通过');
+    return;
+  }
+
+  AMapFlutterLocation locationPlugin = AMapFlutterLocation();
+  AMapFlutterLocation.updatePrivacyShow(true, true);
+  AMapFlutterLocation.updatePrivacyAgree(true);
+  AMapFlutterLocation.setApiKey("d33074d34e5524ed087ce820363a1779", "IOS Api Key");
+
+  // 检查网络连接状态
+  var connectivityResult = await Connectivity().checkConnectivity();
+  bool isConnected = connectivityResult == ConnectivityResult.wifi || connectivityResult == ConnectivityResult.mobile;
+
+  AMapLocationOption locationOption = AMapLocationOption();
+  locationOption.onceLocation = true;
+  locationOption.needAddress = false;
+
+  // 根据网络连接状态设置定位模式
+  if (isConnected) {
+    locationOption.locationMode = AMapLocationMode.Hight_Accuracy;
+  } else {
+    locationOption.locationMode = AMapLocationMode.Device_Sensors;
+  }
+  
+  locationOption.desiredAccuracy = DesiredAccuracy.Best;
+  locationOption.geoLanguage = GeoLanguage.DEFAULT;
+  locationPlugin.setLocationOption(locationOption);
+
+  Completer<Map<String, Object>> completer = Completer();
+  locationPlugin.onLocationChanged().listen((Map<String, Object> result) {
+    if (!completer.isCompleted) {
+      completer.complete(result);
+      locationPlugin.stopLocation();
+    }
+  });
+
+  locationPlugin.startLocation();
+  Map<String, Object> locationResult = await completer.future;
+
+  double latitude = locationResult['latitude'] as double;
+  double longitude = locationResult['longitude'] as double;
+  double accuracy = locationResult['accuracy'] as double;
+
+  deviceInfo ??= _deviceInfo;
+
+  Map<String, dynamic> data = {
+    'longitude': longitude,
+    'device': deviceInfo,
+    'latitude': latitude,
+    'accuracy': accuracy,
+  };
+
+  String accessToken = await _getAccessToken();
+
+  var response = await http.post(
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateLocation/'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $accessToken',
+    },
+    body: jsonEncode(data),
+  );
+  if (response.statusCode == 200) {
+    print('GPS data sent successfully');
+
+    Map<String, dynamic> responseData = json.decode(response.body);
+    // 在这里处理响应数据
+
+  } else {
+    print('Failed to send GPS data. Error: ${response.reasonPhrase}');
+  }
+}
 
 Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
   deviceInfo ??= _deviceInfo; // 使用默认设备信息
-  
-  await FlutterBluePlus.startScan(timeout: Duration(seconds: 15));
-  
-  // 收集扫描结果
-  List<ScanResult> scanResults = [];
-  FlutterBluePlus.scanResults.listen((results) {
-    scanResults = results;
-  });
-  
-  await Future.delayed(Duration(seconds: 15)); // 延长等待时间以确保扫描完成
 
-  // 处理扫描结果
   List<String> bluetoothDataList = [];
-  for (var result in scanResults) {
-    String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
-    String deviceId = result.device.id.toString();
-    bluetoothDataList.add('$deviceName:$deviceId'); // 组合名称和 MAC 地址
-  }
-  
+  Set<String> deviceSet = {}; // 用于去重
+
+  // 开始扫描
+  await FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
+
+  // 监听扫描结果
+  FlutterBluePlus.scanResults.listen((results) {
+    for (var result in results) {
+      String deviceName = result.device.name.isNotEmpty ? result.device.name : 'undefined';
+      String deviceId = result.device.id.toString();
+      String deviceInfo = '$deviceName:$deviceId';
+
+      if (!deviceSet.contains(deviceInfo)) {
+        deviceSet.add(deviceInfo);
+        bluetoothDataList.add(deviceInfo); // 组合名称和 MAC 地址
+      }
+    }
+  });
+
+  // 等待扫描完成
+  await Future.delayed(Duration(seconds: 5));
+
+  // 停止扫描
+  await FlutterBluePlus.stopScan();
+
   String bluetoothData = bluetoothDataList.join(';'); // 使用分号分隔
   String accessToken = await _getAccessToken();
-  
+
   var response = await http.post(
-    Uri.parse('http://gps.primedigitaltech.com:8000/api/updateBT/'),
+    Uri.parse('http://gps.primedigitaltech.com:8000/sensor/updateBT/'),
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $accessToken',
     },
     body: jsonEncode({'connection_device': bluetoothData, 'device': deviceInfo}),
   );
-  
+
+  print("BTdatabodyis");
+  print(bluetoothData);
   if (response.statusCode == 200) {
     print('Bluetooth data sent successfully');
   } else {
@@ -448,6 +492,7 @@ Future<void> collectAndSendBluetoothData([String? deviceInfo]) async {
     _gpsTimer?.cancel();
     _btTimer?.cancel();
     _accelerometerSubscription?.cancel();
+    _gyroscopeSubscription?.cancel(); // 取消陀螺仪订阅
     super.dispose();
   }
 }
@@ -457,6 +502,7 @@ void cancelTimers() {
   _accTimer?.cancel();
   _gpsTimer?.cancel();
   _btTimer?.cancel();
+  _gyroTimer?.cancel();
 }
 
 void main() {

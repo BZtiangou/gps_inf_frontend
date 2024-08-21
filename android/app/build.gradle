@@ -32,13 +32,17 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
+    
     kotlinOptions {
         jvmTarget = '1.8'
     }
 
+
     sourceSets {
-        main.java.srcDirs += 'src/main/kotlin'
+        main.java.srcDirs += 'src/main/java'
+            main {
+        jniLibs.srcDirs = ['libs']
+     }
     }
 
     defaultConfig {
@@ -70,13 +74,29 @@ android {
 }
 
 
-    buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
-        }
+//多个签名文件可以新增debug，和release配置一样
+signingConfigs {
+    release {
+        keyAlias localProperties['keyAlias']
+        keyPassword localProperties['keyPassword']
+        storeFile localProperties['storeFile'] ? file(localProperties['storeFile']) : null
+        storePassword localProperties['storePassword']
     }
+}
+
+buildTypes {
+    //多打一个debug包，可以用debug的签名文件，也可以不用
+    debug {
+        signingConfig signingConfigs.debug
+    }
+    release {
+        signingConfig signingConfigs.release
+        minifyEnabled false
+        shrinkResources false
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+}
+
 }
 
 flutter {
@@ -86,8 +106,21 @@ flutter {
 dependencies {
     // Include all JARs in the 'libs' directory
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // implementation 'com.amap.api:3dmap-location-search:latest.integration'
+    // implementation 'com.amap.api:3dmap-location-search:latest.integration'
+    // AMap 3D map integration
+    //  implementation 'com.amap.api:3dmap:10.0.800'
+
+    // implementation 'com.amap.api:search:latest.integration'
+
+    // implementation 'com.amap.api:location:latest.integration'
+    // implementation 'com.amap.api:3dmap:3.0.0'
+    // implementation 'com.amap.api:search:3.0.0'
+    // Include all JARs in the 'libs' directory
+    // implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // AMap 3D map integration
-    implementation 'com.amap.api:3dmap:latest.integration'
+    // implementation 'com.amap.api:3dmap:latest.integration'
+
 
 }

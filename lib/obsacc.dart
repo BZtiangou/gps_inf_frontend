@@ -80,7 +80,7 @@ Widget chartToRun(List<List<double>> dataPoints, List<String> dt) {
   );
   return SingleChildScrollView(
     scrollDirection: Axis.horizontal,
-    child: Container(
+    child: SizedBox(
       width: dataPoints[0].length * 20, // 根据数据点数量调整宽度
       height: 400,
       child: lineChart,
@@ -89,7 +89,7 @@ Widget chartToRun(List<List<double>> dataPoints, List<String> dt) {
 }
 
 class AccObservationPage extends StatelessWidget {
-  const AccObservationPage({Key? key}) : super(key: key);
+  const AccObservationPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +105,7 @@ class AccObservationPage extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
   final String title;
 
   @override

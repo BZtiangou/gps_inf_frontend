@@ -28,6 +28,9 @@ dependencies:
   coordtransform: ^1.0.1  
   connectivity_plus: ^3.0.3 # 获取网络连接状态
   intl: ^0.18.0 
+  battery_info: ^1.1.1 
+  # tflite: ^1.0.3  # 模型
+  # image_picker: ^0.8.4+2
 
 dev_dependencies:
   flutter_test:
@@ -37,3 +40,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # assets:
+  #   - assets/models/yolov8s-pose.onnx
+  #   - assets/video/1.mp4
