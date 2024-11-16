@@ -28,9 +28,9 @@ allprojects {
           // 对于与 Kotlin 1.6 冲突的库，强制使用 Kotlin 1.6
             // 例如，某些库使用了 Kotlin 1.6 版本，你可以指定这些库使用 Kotlin 1.6
             // 举例，假设 `some-library` 使用了 Kotlin 1.6 版本:
-        eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.version == '1.6.0') {
-                details.useVersion '1.6.0'  // 强制这些库使用 1.6.0 版本
+        eachDependency {
+            if (requested.group == 'org.jetbrains.kotlin' && requested.version == '1.6.0') {
+                useVersion '1.6.0'  // 强制使用 Kotlin 1.6.0 版本
             }
         }
     }
