@@ -12,7 +12,8 @@ import 'btlabel.dart'; // 导入蓝牙数据标注页面
 import 'main.dart';
 import 'exp_histroy.dart';
 import 'obsgyro.dart'; 
-import 'battery.dart';
+// import 'battery.dart';
+import 'memo.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -405,12 +406,12 @@ Future<String?> _showPhoneNumberDialog() async {
               label: '角速度',
               onTap: () => _navigateToGyroPage(context), // 新增入口
             ),
-              _buildGridItem(
-              context,
-              icon: Icons.battery_4_bar,
-              label: '电池信息',
-              onTap: () => _navigateToBatteryPage(context), // 新增入口
-            ),
+            //   _buildGridItem(
+            //   context,
+            //   icon: Icons.battery_4_bar,
+            //   label: '电池信息',
+            //   onTap: () => _navigateToBatteryPage(context), // 新增入口
+            // ),
           ],
         ),
       ),
@@ -422,7 +423,7 @@ Future<String?> _showPhoneNumberDialog() async {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
-            label: '信息',
+            label: '随手记',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -436,6 +437,12 @@ Future<String?> _showPhoneNumberDialog() async {
               context,
               MaterialPageRoute(builder: (context) => PersonPage()), // 跳转到PersonPage
             );
+          }
+                    else if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MemoPage()), // 跳转到 MemoPage
+          );
           }
         },
       ),
@@ -520,10 +527,10 @@ Future<String?> _showPhoneNumberDialog() async {
       MaterialPageRoute(builder: (context) => GyroObservationPage()),
     );
   }
-      void _navigateToBatteryPage(BuildContext context) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => BatteryInfoPage()),
-    );
-  }
+  //     void _navigateToBatteryPage(BuildContext context) async {
+  //   await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(builder: (context) => BatteryInfoPage()),
+  //   );
+  // }
 }

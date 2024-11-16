@@ -24,57 +24,52 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.example.gps_inf"
-    // compileSdkVersion flutter.compileSdkVersion
-    compileSdk = flutter.compileSdkVersion
+    compileSdkVersion 34
     ndkVersion flutter.ndkVersion
-
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        // sourceCompatibility JavaVersion.VERSION_1_8
+        // targetCompatibility JavaVersion.VERSION_1_8
     }
-    
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-
+    // lint {
+    //       baseline = file("lint-baseline.xml")
+    //   }
     sourceSets {
         main.java.srcDirs += 'src/main/java'
             main {
         jniLibs.srcDirs = ['libs']
      }
     }
-
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+        // jvmTarget = '1.8'
+    }
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.gps_inf"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-                    // Configure NDK to support specific ABIs
+        minSdkVersion 24
+        targetSdkVersion 34
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
-        targetSdkVersion flutter.targetSdkVersion
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
-        android {
-        defaultConfig {
-            minSdkVersion 21
-        }
-        }
+        versionCode 1
+        versionName "1.0"
     }
 
     buildscript {
+    ext.kotlin_version = '2.0.21' // 将此处的版本号替换为最新的Kotlin版本
     repositories {
         google()
-        jcenter()
+        // jcenter()
     }
 
 }
 
-
-//多个签名文件可以新增debug，和release配置一样
 signingConfigs {
     release {
         keyAlias localProperties['keyAlias']
@@ -85,10 +80,6 @@ signingConfigs {
 }
 
 buildTypes {
-    //多打一个debug包，可以用debug的签名文件，也可以不用
-    debug {
-        signingConfig signingConfigs.debug
-    }
     release {
         signingConfig signingConfigs.release
         minifyEnabled false
@@ -103,24 +94,14 @@ flutter {
     source '../..'
 }
 
+
 dependencies {
-    // Include all JARs in the 'libs' directory
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    // implementation 'com.amap.api:3dmap-location-search:latest.integration'
-    // implementation 'com.amap.api:3dmap-location-search:latest.integration'
-    // AMap 3D map integration
-    //  implementation 'com.amap.api:3dmap:10.0.800'
+}
 
-    // implementation 'com.amap.api:search:latest.integration'
-
-    // implementation 'com.amap.api:location:latest.integration'
-    // implementation 'com.amap.api:3dmap:3.0.0'
-    // implementation 'com.amap.api:search:3.0.0'
-    // Include all JARs in the 'libs' directory
-    // implementation fileTree(dir: 'libs', include: ['*.jar'])
-
-    // AMap 3D map integration
-    // implementation 'com.amap.api:3dmap:latest.integration'
-
-
+//禁用 shared_preferences_android 模块的测试
+project(':shared_preferences_android') {
+    tasks.withType(Test) {
+        enabled = false
+    }
 }

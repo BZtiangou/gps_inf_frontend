@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1006742581366",
+    "project_id": "mobilesensing-92b18",
+    "storage_bucket": "mobilesensing-92b18.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1006742581366:android:8393f6775843921312ef57",
+        "android_client_info": {
+          "package_name": "com.example.gps_inf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcTQOcBOx7f0fmDXc6BMuLm7DDX0KdX14"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

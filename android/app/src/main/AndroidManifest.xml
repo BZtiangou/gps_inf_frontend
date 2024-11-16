@@ -14,10 +14,6 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
-            <!-- Specifies an Android theme to apply to this Activity as soon as
-                 the Android process has started. This theme is visible to the user
-                 while the Flutter UI initializes. After that, this theme continues
-                 to determine the Window background behind the Flutter UI. -->
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
@@ -32,18 +28,29 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <service
+        <!-- <service
         android:name="be.tramckrijte.workmanager.BackgroundWorker"
         android:permission="android.permission.BIND_JOB_SERVICE"
-        android:exported="true"/>
-        <service
-    android:name="com.amap.api.location.APSService"/>
+        android:exported="true"/> -->
+        <service android:name="com.amap.api.location.APSService"/>
+    <service 
+    android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+    android:foregroundServiceType="location|connectedDevice|dataSync"
+    android:priority="1000"
+    android:persistent="true"
+    android:stopWithTask="false"
+    android:exported="false" />
+
     <meta-data
     android:name="com.amap.api.v2.apikey"
     android:value="d33074d34e5524ed087ce820363a1779" />
+
     </application>
-    <!-- 访问电池信息 -->
-    <uses-permission android:name="android.permission.BATTERY_STATS" />
+    
+     <!-- <uses-sdk tools:overrideLibrary="androidx.fragment" /> -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+    <!-- 访问电池信息 一般应用无法获取？ -->
+    <!-- <uses-permission android:name="android.permission.BATTERY_STATS" /> -->
     <!--允许获取精确位置，精准定位必选-->
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
         
@@ -67,18 +74,35 @@
         <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
         <uses-permission android:name="android.permission.WAKE_LOCK"/>
         <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+        <uses-permission android:name="android.permission.BODY_SENSORS" />
            <!--用于申请调用A-GPS模块,卫星定位加速-->
     <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
         <!--允许写设备缓存，用于问题排查-->
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <!-- <uses-permission android:name="android.permission.WRITE_SETTINGS" /> -->
  
     <!--允许写入扩展存储，用于写入缓存定位数据-->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
  
     <!--允许读设备等信息，用于问题排查-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    //遇到地图不显示补充以下权限
+    <!-- //遇到地图不显示补充以下权限 -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <!-- required -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+<!-- foregroundServiceType: dataSync -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+<!-- foregroundServiceType: remoteMessaging -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_REMOTE_MESSAGING" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:minSdkVersion="34" android:name="android.permission.USE_EXACT_ALARM" />
+    <!-- 如果你的应用程序需要精确的闹钟服务，例如在 Android 12 及更高版本中 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+<uses-permission android:name="android.permission.REORDER_TASKS" />
+<uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
 </manifest>

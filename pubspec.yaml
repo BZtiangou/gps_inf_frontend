@@ -12,12 +12,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  geolocator: ^11.1.0
+  # geolocator: ^11.1.0
   device_info: ^2.0.0
   http: ^1.1.0
-  flutter_blue_plus: ^1.0.0
-  permission_handler: ^10.2.0
-  sensors_plus: ^4.0.2
+  flutter_blue_plus: ^1.33.5
+  permission_handler: ^11.3.1 
+  sensors_plus: ^6.1.0
   flutter_background: ^1.0.3
   shared_preferences: ^2.0.6
   flutter_charts : ^0.5.2
@@ -26,11 +26,16 @@ dependencies:
   amap_flutter_map: ^3.0.0 # flutter2空安全新版本
   amap_flutter_location: ^3.0.0 # flutter2空安全新版本
   coordtransform: ^1.0.1  
-  connectivity_plus: ^3.0.3 # 获取网络连接状态
+  connectivity_plus: ^6.1.0 # 获取网络连接状态
   intl: ^0.18.0 
-  battery_info: ^1.1.1 
-  # tflite: ^1.0.3  # 模型
+  # battery_info: ^1.1.1 
+  # android_intent_plus: ^5.2.0
+  flutter_foreground_task: ^8.13.0
+  # firebase_messaging: ^15.1.3
+  # background_fetch: ^1.1.6
+  # tflite_flutter: ^0.9.0
   # image_picker: ^0.8.4+2
+  # tflite_flutter_helper: ^0.3.0
 
 dev_dependencies:
   flutter_test:
@@ -41,5 +46,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   # assets:
-  #   - assets/models/yolov8s-pose.onnx
-  #   - assets/video/1.mp4
+  # #   - assets/models/yolov8s-pose.onnx
+  #   - assets/img/1.jpg
+  #   - assets/models/yolov8s-pose_float32.tflite

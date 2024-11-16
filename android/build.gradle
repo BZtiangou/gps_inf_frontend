@@ -1,15 +1,13 @@
 buildscript {
-    ext.kotlin_version = '1.7.10'
+    ext.kotlin_version = '1.9.0'
     repositories {
         google()
         mavenCentral()
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.android.tools.build:gradle:4.2.2' // 更新 Gradle 插件版本
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20' // 更新 Kotlin Gradle 插件版本
-        classpath 'com.google.gms:google-services:4.3.10'
+        classpath 'com.android.tools.build:gradle:8.1.0' // 更新 Gradle 插件版本
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.21' // 更新 Kotlin Gradle 插件版本
     }
 }
 
@@ -17,11 +15,43 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        // jcenter()
     }
+    configurations.all {
+    resolutionStrategy {
+        force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.0'  // 强制使用 Kotlin 1.9 版本
+        force 'org.jetbrains.kotlin:kotlin-reflect:1.9.0'  // 强制使用 Kotlin 1.9 版本
+        force 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0'  // 强制使用 Kotlin Gradle 插件 1.9 版本
+          // 对于与 Kotlin 1.6 冲突的库，强制使用 Kotlin 1.6
+            // 例如，某些库使用了 Kotlin 1.6 版本，你可以指定这些库使用 Kotlin 1.6
+            // 举例，假设 `some-library` 使用了 Kotlin 1.6 版本:
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.jetbrains.kotlin' && details.requested.version == '1.6.0') {
+                details.useVersion '1.6.0'  // 强制这些库使用 1.6.0 版本
+            }
+        }
+    }
+}
 }
 
 rootProject.buildDir = '../build'
 subprojects {
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin("com.android.application") ||
+                project.plugins.hasPlugin("com.android.library")) {
+            project.android {
+                compileSdkVersion 34
+                buildToolsVersion "34.0.0"
+            }
+        }
+        if (project.hasProperty("android")) {
+            project.android.defaultConfig.minSdkVersion = 24
+        }
+    }
+
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
 subprojects {
